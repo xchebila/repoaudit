@@ -1,2 +1,2 @@
 # repoaudit
-RepoAudit is a fast, CLI-based security auditor for Git repositories that detects critical risks such as exposed secrets, insecure configurations, vulnerable dependencies, and CI/CD misconfigurations. All in seconds, with zero setup.
+RepoAudit is the git status of security: a fast CLI that scans repositories for real-world security risks in seconds.
