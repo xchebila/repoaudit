@@ -43,4 +43,4 @@ SECRETS SCORE: 0/100  (F)
 
 ## Status
 
-Phase 1 (MVP) — secrets scanner: hardcoded credentials in the working tree (AWS, GitHub, Stripe, Slack, Discord, OpenAI keys, private key blocks, raw JWTs, committed `.env` files), with `.gitignore` support and a severity-weighted score. See [vision.md](vision.md) for the full roadmap and [docs/decisions/](docs/decisions/) for design rationale.
+Phase 1 (MVP) — secrets scanner: hardcoded credentials in the working tree (AWS, GitHub, Stripe, Slack, Discord, OpenAI keys, private key blocks, raw JWTs, committed `.env` files), with `.gitignore` support and a severity-weighted score. See [vision.md](docs/vision.md) for the full roadmap and [docs/decisions/](docs/decisions/) for design rationale.
