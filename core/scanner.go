@@ -8,10 +8,11 @@ import (
 	"strings"
 )
 
-// maxFileSize skips large files (binaries, lockfiles, vendored bundles) —
+// MaxFileSize skips large files (binaries, lockfiles, vendored bundles) —
 // they are never where a hand-typed secret lives, and reading them is the
-// single biggest threat to the "scan in < 5s" MVP exit criterion.
-const maxFileSize = 2 << 20 // 2 MiB
+// single biggest threat to the "scan in < 5s" MVP exit criterion. Exported
+// so other repo-level scanners (e.g. git-history) apply the same guard.
+const MaxFileSize = 2 << 20 // 2 MiB
 
 // alwaysSkipDirs are directories no analyzer needs to look inside for
 // Phase 1. .git is handled separately since git history has its own
@@ -75,7 +76,7 @@ func (s *Scanner) Scan() ([]Finding, error) {
 		if err != nil {
 			return err
 		}
-		if info.Size() > maxFileSize {
+		if info.Size() > MaxFileSize {
 			return nil
 		}
 
@@ -85,7 +86,7 @@ func (s *Scanner) Scan() ([]Finding, error) {
 			// rather than failing the whole scan.
 			return nil
 		}
-		if isBinary(content) {
+		if IsBinary(content) {
 			return nil
 		}
 
@@ -99,10 +100,10 @@ func (s *Scanner) Scan() ([]Finding, error) {
 	return findings, err
 }
 
-// isBinary uses the same heuristic as git: a NUL byte in the first chunk
+// IsBinary uses the same heuristic as git: a NUL byte in the first chunk
 // means "not text". Cheap and good enough — RepoAudit doesn't need to be
 // exact here, just fast and non-noisy on binary assets.
-func isBinary(content []byte) bool {
+func IsBinary(content []byte) bool {
 	n := len(content)
 	if n > 8000 {
 		n = 8000
