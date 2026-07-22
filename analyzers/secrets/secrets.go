@@ -25,6 +25,11 @@ type rule struct {
 	// changes which files match, since pattern always matches a
 	// superstring containing one of these literals.
 	prefilter [][]byte
+	// exclude, if set, is checked against each raw match; a true result
+	// drops that match without creating a Finding. Used for well-known,
+	// publicly documented placeholder values that would otherwise match
+	// the pattern exactly — not a general noise filter.
+	exclude func(match []byte) bool
 }
 
 func anyContains(content []byte, substrs [][]byte) bool {
@@ -46,11 +51,17 @@ var rules = []rule{
 		severity: core.Critical,
 		message:  "An AWS access key ID was found hardcoded in this file. Combined with its secret key, it grants immediate programmatic access to this AWS account.",
 		fix:      "Revoke this key in the AWS IAM console, then load credentials from environment variables or a secrets manager (AWS Secrets Manager, Vault).",
-		// False positive: a test fixture or documentation snippet showing a
-		// fake key that still matches the AKIA[16 chars] shape (e.g. AWS's
-		// own example keys in tutorials).
+		// False positive, confirmed in the wild: AWS's own SDKs and docs
+		// use AKIAIOSFODNN7EXAMPLE as the canonical placeholder access key
+		// — found in vendor/github.com/aws/aws-sdk-go's own source comments
+		// during git-history testing on prometheus. AWS's documented
+		// convention is that every example key they publish ends in
+		// "EXAMPLE", so that's the exclusion, not a one-off literal.
 		pattern:   regexp.MustCompile(`\bAKIA[0-9A-Z]{16}\b`),
 		prefilter: [][]byte{[]byte("AKIA")},
+		exclude: func(match []byte) bool {
+			return bytes.HasSuffix(match, []byte("EXAMPLE"))
+		},
 	},
 	{
 		id:       "secrets.github_token",
@@ -155,6 +166,9 @@ func (a *Analyzer) Run(file core.FileContext) []core.Finding {
 			continue
 		}
 		for _, loc := range r.pattern.FindAllIndex(file.Content, -1) {
+			if r.exclude != nil && r.exclude(file.Content[loc[0]:loc[1]]) {
+				continue
+			}
 			findings = append(findings, core.Finding{
 				ID:       r.id,
 				Severity: r.severity,

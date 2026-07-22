@@ -21,7 +21,14 @@ func newScanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
 		Short: "Scan a local repository for exposed secrets, in the working tree and in git history",
-		Args:  cobra.MaximumNArgs(1),
+		Long: `Scan a local repository for exposed secrets, in the working tree and in git history.
+
+By default, git history scanning is bounded by a short time budget so the
+scan stays fast. --full-history removes that bound and can take several
+minutes on repos with a large history (observed: ~18 minutes on a repo with
+~18k commits) — if you use it in CI, set a generous timeout, or it will
+look like a hung job.`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if fullHistory && noHistory {
 				return fmt.Errorf("--full-history and --no-history are mutually exclusive")
@@ -55,7 +62,17 @@ func newScanCmd() *cobra.Command {
 			}
 
 			if !noHistory {
-				result, err := githistory.Scan(path, githistory.Options{FullHistory: fullHistory})
+				opts := githistory.Options{FullHistory: fullHistory}
+				if fullHistory {
+					opts.OnProgress = func(n, total int) {
+						if total > 0 {
+							fmt.Fprintf(cmd.ErrOrStderr(), "   ... scanned %d/%d commits so far\n", n, total)
+						} else {
+							fmt.Fprintf(cmd.ErrOrStderr(), "   ... scanned %d commits so far\n", n)
+						}
+					}
+				}
+				result, err := githistory.Scan(path, opts)
 				switch {
 				case errors.Is(err, githistory.ErrNotAGitRepo):
 					// Not every scan target is a git checkout; working-tree
@@ -80,7 +97,7 @@ func newScanCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&fullHistory, "full-history", false, "scan the entire reachable git history plus dangling commits, no time budget")
+	cmd.Flags().BoolVar(&fullHistory, "full-history", false, "scan entire reachable history + dangling commits, no time budget — can take several minutes on large repos, avoid in CI without a generous timeout")
 	cmd.Flags().BoolVar(&noHistory, "no-history", false, "skip git history scanning, working tree only")
 
 	return cmd
