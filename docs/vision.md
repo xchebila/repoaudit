@@ -190,6 +190,7 @@ plugins:
 - **Go** — bon choix pour un CLI rapide, binaire unique, facile à distribuer
 - CLI : Cobra ou urfave/cli
 - Git : go-git
+- YAML (CI/CD Analyzer, Phase 3) : gopkg.in/yaml.v3 — pas de parseur YAML en stdlib, lib de référence de l'écosystème Go
 - Parallélisation : goroutines
 - Output : templating + JSON
 - HTTP : OSV / GitHub API
