@@ -83,4 +83,4 @@ Phase 1 — secrets scanner: hardcoded credentials in the working tree (AWS, Git
 
 Phase 2 — git history analyzer (the same secret rules applied to every commit's changed files, so a secret that was committed and later deleted still gets caught) and Docker analyzer (unpinned/`latest` base images, `ADD` used where `COPY` would do, containers with no non-root `USER`). Secrets hardcoded in a Dockerfile's `ENV`/`ARG` are already caught by the secrets rules above — a Dockerfile is just a text file like any other.
 
-See [vision.md](docs/vision.md) for the full roadmap and [docs/decisions/](docs/decisions/) for design rationale.
+See [vision.md](docs/vision.md) for the full roadmap, [docs/decisions/](docs/decisions/) for design rationale, [docs/testing.md](docs/testing.md) for the test corpus and exit criteria, and [docs/benchmarks.md](docs/benchmarks.md) for the timing history behind them.
