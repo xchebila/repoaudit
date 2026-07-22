@@ -23,6 +23,23 @@ var alwaysSkipDirs = map[string]bool{
 	"vendor":       true,
 }
 
+// IsVendoredPath reports whether any path segment names a directory this
+// project treats as third-party, not developer-authored: vendor/,
+// node_modules/. Exported so git-history scanning applies the same
+// exclusion the working-tree Scanner already does via alwaysSkipDirs —
+// without it, a single "vendor bump" commit touching thousands of
+// third-party files both tanks scan speed and surfaces the third party's
+// own test/placeholder credentials (e.g. Google's and AWS's publicly
+// documented example service-account keys) as if they were this repo's.
+func IsVendoredPath(path string) bool {
+	for _, part := range strings.Split(filepath.ToSlash(path), "/") {
+		if part == "node_modules" || part == "vendor" {
+			return true
+		}
+	}
+	return false
+}
+
 // Scanner walks a repository's working tree and runs every registered
 // Analyzer against each eligible file.
 type Scanner struct {

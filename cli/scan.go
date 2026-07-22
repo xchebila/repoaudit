@@ -55,7 +55,17 @@ func newScanCmd() *cobra.Command {
 			}
 
 			if !noHistory {
-				result, err := githistory.Scan(path, githistory.Options{FullHistory: fullHistory})
+				opts := githistory.Options{FullHistory: fullHistory}
+				if fullHistory {
+					opts.OnProgress = func(n, total int) {
+						if total > 0 {
+							fmt.Fprintf(cmd.ErrOrStderr(), "   ... scanned %d/%d commits so far\n", n, total)
+						} else {
+							fmt.Fprintf(cmd.ErrOrStderr(), "   ... scanned %d commits so far\n", n)
+						}
+					}
+				}
+				result, err := githistory.Scan(path, opts)
 				switch {
 				case errors.Is(err, githistory.ErrNotAGitRepo):
 					// Not every scan target is a git checkout; working-tree

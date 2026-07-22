@@ -49,7 +49,20 @@ type Options struct {
 	// no config for its own sake) — exists so benchmarks can sweep budgets
 	// without recompiling a different constant each time.
 	Budget time.Duration
+	// OnProgress, if set, is called periodically during a FullHistory scan
+	// with the running commit count and the total reachable commit count
+	// (0 if that count isn't available). FullHistory has no time budget by
+	// design (e.g. a repo with vendored dependencies can hit individual
+	// commits that take seconds to diff), so without some signal — and a
+	// denominator, not just a counter — a long scan is indistinguishable
+	// from a hang. Ignored outside FullHistory, where the default budget
+	// already keeps runs short enough not to need it.
+	OnProgress func(commitsScanned, total int)
 }
+
+// progressInterval is how often (in commits) OnProgress fires during a
+// FullHistory scan.
+const progressInterval = 200
 
 // Result carries findings plus enough context to be honest about coverage:
 // Truncated tells the caller (and, ultimately, the user) whether the report
@@ -75,6 +88,20 @@ func Scan(repoPath string, opts Options) (Result, error) {
 	analyzer := secrets.New()
 	visited := map[plumbing.Hash]bool{}
 	result := Result{}
+
+	// Counting reachable commits is a plain walk of commit objects with no
+	// tree diffing or blob reads — orders of magnitude cheaper than the
+	// scan itself — so FullHistory can report "N/total" instead of a bare
+	// counter that gives no way to tell slow-but-progressing apart from
+	// stuck. Skipped outside FullHistory: the default budget already keeps
+	// runs short enough that a progress readout isn't needed.
+	totalCommits := 0
+	if opts.FullHistory && opts.OnProgress != nil {
+		totalCommits, err = countReachableCommits(repo)
+		if err != nil {
+			totalCommits = 0
+		}
+	}
 
 	logIter, err := repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime})
 	if err != nil {
@@ -112,6 +139,10 @@ func Scan(repoPath string, opts Options) (Result, error) {
 		skipTo := result.CommitsScanned == 0
 		result.CommitsScanned++
 		result.Findings = append(result.Findings, scanCommit(analyzer, c, skipTo)...)
+
+		if opts.FullHistory && opts.OnProgress != nil && result.CommitsScanned%progressInterval == 0 {
+			opts.OnProgress(result.CommitsScanned, totalCommits)
+		}
 	}
 
 	if opts.FullHistory {
@@ -123,6 +154,23 @@ func Scan(repoPath string, opts Options) (Result, error) {
 
 // ErrNotAGitRepo signals repoPath has no .git to walk.
 var ErrNotAGitRepo = errors.New("not a git repository")
+
+// countReachableCommits walks commit objects only — no Tree(), no diffing,
+// no blob reads — so it's cheap even on repos where the real scan is slow.
+func countReachableCommits(repo *git.Repository) (int, error) {
+	iter, err := repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime})
+	if err != nil {
+		return 0, err
+	}
+	defer iter.Close()
+
+	n := 0
+	err = iter.ForEach(func(*object.Commit) error {
+		n++
+		return nil
+	})
+	return n, err
+}
 
 // scanDangling sweeps every commit object physically present in the repo's
 // object store, regardless of ref reachability, and scans whichever ones
@@ -182,6 +230,13 @@ func scanCommit(analyzer *secrets.Analyzer, c *object.Commit, skipTo bool) []cor
 
 	var findings []core.Finding
 	for _, change := range changes {
+		// Checked before Files() (which decompresses blobs) so a vendor
+		// bump touching thousands of third-party files costs nothing
+		// beyond the tree diff itself — see core.IsVendoredPath.
+		if core.IsVendoredPath(change.To.Name) || core.IsVendoredPath(change.From.Name) {
+			continue
+		}
+
 		from, to, err := change.Files()
 		if err != nil {
 			continue
@@ -189,17 +244,32 @@ func scanCommit(analyzer *secrets.Analyzer, c *object.Commit, skipTo bool) []cor
 		if skipTo {
 			to = nil
 		}
-		for _, f := range [2]*object.File{from, to} {
-			if f == nil {
-				continue
-			}
-			findings = append(findings, scanBlob(analyzer, f, c.Hash.String())...)
+		// A pure rename or mode change (same path pair, unchanged content)
+		// leaves from/to pointing at the same blob — scanning both would
+		// report the same match twice for one commit. Content is what
+		// matters here, so comparing blob hashes is the correct de-dup key.
+		// Two distinct files that happen to share a basename (e.g.
+		// examples/a/server.key and examples/b/server.key deleted in the
+		// same commit) have different hashes and are correctly kept as two
+		// findings — see docs/decisions/0002-git-history-depth.md.
+		if from != nil && to != nil && from.Hash == to.Hash {
+			to = nil
+		}
+		// change.From.Name / change.To.Name (not File.Name, which
+		// TreeEntryFile leaves as just the tree-local basename) carry the
+		// full repo-relative path — using File.Name here made two
+		// same-named files in different directories print identically.
+		if from != nil {
+			findings = append(findings, scanBlob(analyzer, from, change.From.Name, c.Hash.String())...)
+		}
+		if to != nil {
+			findings = append(findings, scanBlob(analyzer, to, change.To.Name, c.Hash.String())...)
 		}
 	}
 	return findings
 }
 
-func scanBlob(analyzer *secrets.Analyzer, f *object.File, commitHash string) []core.Finding {
+func scanBlob(analyzer *secrets.Analyzer, f *object.File, path, commitHash string) []core.Finding {
 	if f.Size > core.MaxFileSize {
 		return nil
 	}
@@ -211,7 +281,7 @@ func scanBlob(analyzer *secrets.Analyzer, f *object.File, commitHash string) []c
 		return nil
 	}
 
-	fc := core.FileContext{Path: f.Name, Content: []byte(content)}
+	fc := core.FileContext{Path: path, Content: []byte(content)}
 	results := analyzer.Run(fc)
 	for i := range results {
 		results[i].Category = "git-history"
