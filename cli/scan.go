@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"repoaudit/analyzers/cicd"
 	"repoaudit/analyzers/docker"
 	"repoaudit/analyzers/githistory"
 	"repoaudit/analyzers/secrets"
@@ -21,8 +22,8 @@ func newScanCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
-		Short: "Scan a local repository for exposed secrets and Dockerfile misconfigurations",
-		Long: `Scan a local repository for exposed secrets and Dockerfile misconfigurations, in the working tree and in git history.
+		Short: "Scan a local repository for exposed secrets, Dockerfile, and CI/CD misconfigurations",
+		Long: `Scan a local repository for exposed secrets, Dockerfile, and CI/CD misconfigurations, in the working tree and in git history.
 
 By default, git history scanning is bounded by a short time budget so the
 scan stays fast. --full-history removes that bound and can take several
@@ -52,7 +53,7 @@ look like a hung job.`,
 				return fmt.Errorf("%s is not a directory", path)
 			}
 
-			scanner := core.NewScanner(path, secrets.New(), docker.New())
+			scanner := core.NewScanner(path, secrets.New(), docker.New(), cicd.New())
 			for _, w := range scanner.Warnings() {
 				fmt.Fprintf(cmd.ErrOrStderr(), "⚠️  gitignore: %s\n", w)
 			}
@@ -61,6 +62,7 @@ look like a hung job.`,
 			if err != nil {
 				return fmt.Errorf("scan failed: %w", err)
 			}
+			findings = append(findings, cicd.CheckDependabot(path)...)
 
 			if !noHistory {
 				opts := githistory.Options{FullHistory: fullHistory}
