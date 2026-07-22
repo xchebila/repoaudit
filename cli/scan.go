@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"repoaudit/analyzers/cicd"
+	"repoaudit/analyzers/dependencies"
 	"repoaudit/analyzers/docker"
 	"repoaudit/analyzers/githistory"
 	"repoaudit/analyzers/secrets"
@@ -19,6 +20,7 @@ import (
 func newScanCmd() *cobra.Command {
 	var fullHistory bool
 	var noHistory bool
+	var checkDeps bool
 
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
@@ -29,7 +31,11 @@ By default, git history scanning is bounded by a short time budget so the
 scan stays fast. --full-history removes that bound and can take several
 minutes on repos with a large history (observed: ~18 minutes on a repo with
 ~18k commits) — if you use it in CI, set a generous timeout, or it will
-look like a hung job.`,
+look like a hung job.
+
+Dependency vulnerability checking (go.sum, requirements.txt via OSV.dev)
+is off by default too, for a different reason: it's the only check here
+that needs the network. --deps enables it explicitly.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if fullHistory && noHistory {
@@ -63,6 +69,25 @@ look like a hung job.`,
 				return fmt.Errorf("scan failed: %w", err)
 			}
 			findings = append(findings, cicd.CheckDependabot(path)...)
+
+			deps := dependencies.Discover(path)
+			switch {
+			case len(deps) == 0:
+				// Nothing to check either way — stay silent, not every
+				// repo has a Go or Python manifest.
+			case checkDeps:
+				result := dependencies.CheckVulnerabilities(deps)
+				if result.Warning != "" {
+					fmt.Fprintf(cmd.ErrOrStderr(), "⚠️  %s\n", result.Warning)
+				}
+				findings = append(findings, result.Findings...)
+			default:
+				noun := "dependencies"
+				if len(deps) == 1 {
+					noun = "dependency"
+				}
+				fmt.Fprintf(cmd.ErrOrStderr(), "ℹ️  Found %d %s — run with --deps to check them against known vulnerabilities (requires network).\n", len(deps), noun)
+			}
 
 			if !noHistory {
 				opts := githistory.Options{FullHistory: fullHistory}
@@ -102,6 +127,7 @@ look like a hung job.`,
 
 	cmd.Flags().BoolVar(&fullHistory, "full-history", false, "scan entire reachable history + dangling commits, no time budget — can take several minutes on large repos, avoid in CI without a generous timeout")
 	cmd.Flags().BoolVar(&noHistory, "no-history", false, "skip git history scanning, working tree only")
+	cmd.Flags().BoolVar(&checkDeps, "deps", false, "check go.sum/requirements.txt dependencies against known vulnerabilities via OSV.dev — requires network, off by default")
 
 	return cmd
 }
