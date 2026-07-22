@@ -85,6 +85,10 @@ git clone --quiet https://github.com/prometheus/prometheus.git
 
 `prometheus` est le cas qui a révélé la plupart des limites réelles jusqu'ici (vendor bump massif dans l'historique, faux positifs dans du code vendoré, Dockerfile réel avec un tag `latest` et un `Dockerfile.distroless`) — c'est le premier repo à re-tester dès qu'un changement touche `githistory` ou `docker`.
 
+## Dockerfiles et workflows réels dans le corpus Phase 1
+
+Le corpus de 20 repos sert aussi à valider `docker` et `cicd` contre du contenu réel, pas seulement des fixtures synthétiques — 9 des 20 ont au moins un vrai workflow GitHub Actions (axios, caddy, chalk, cobra, flask, gin, ohmyzsh, prometheus, requests ; 57 fichiers `.yml` au total). C'est ce qui a révélé que `gin/.github/workflows/codeql.yml` et `requests/.github/workflows/codeql-analysis.yml` contiennent tous les deux `@main`/`@master` dans un contexte qui n'est pas une référence d'action (`branches: [main]`, un commentaire) — la justification empirique du parsing YAML structurel plutôt que regex, voir `docs/decisions/0005-cicd-analyzer-scope.md`.
+
 ## Critères de sortie mesurables (déjà validés)
 
 - **Vitesse < 5s** (critère de sortie du MVP, vision.md) : validé sur les 20 repos du corpus Phase 1 (max observé : ~1.5s, fastapi/svelte) et sur les clones complets en mode par défaut (max observé : ~3s, prometheus — budget git-history de 1.5s + scan working-tree + overhead process). `--full-history` n'est **pas** soumis à ce critère : c'est un mode explicitement "sans budget", jusqu'à 18 minutes observées sur prometheus (18k commits) — voir `docs/decisions/0002-git-history-depth.md`.
