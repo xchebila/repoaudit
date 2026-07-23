@@ -28,6 +28,8 @@ Composite action qui inclut son propre `actions/checkout@v4` avec `fetch-depth: 
 
 Comme chaque décision de packaging/infra de ce projet, un YAML "qui compile" ne prouve rien. `.github/workflows/repoaudit-self-check.yml` fait tourner l'action (`uses: ./`) sur les propres PR et push de ce repo — c'est aussi la seule façon réaliste de tester un vrai payload d'event GitHub, un vrai runner, et une vraie résolution `go install` depuis GitHub, plutôt que de le simuler localement.
 
+**Ce test a immédiatement trouvé un vrai bug**, invisible en local : sur un event `pull_request`, `github.sha` pointe vers le commit de merge éphémère que GitHub construit pour le run (`refs/pull/N/merge`) — un commit qui n'existe sur aucune branche du dépôt distant, donc jamais résolvable par `go install`. Le fallback (invocation locale, `github.action_ref` vide) doit distinguer l'event : `github.event.pull_request.head.sha` sur une PR (le vrai commit poussé), `github.sha` sinon (correct sur un `push`, où c'est bien le commit réel). Exactement le genre d'erreur que la discipline "valider en CI réelle, pas en local" de ce projet existe pour attraper.
+
 ## Conséquences
 
 - `fail-on-new` contrôle si l'action échoue (`continue-on-error` conditionnel), pas si repoaudit tourne — repoaudit tourne toujours, le choix ne porte que sur l'échec du build.

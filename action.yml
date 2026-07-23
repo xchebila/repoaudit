@@ -54,7 +54,20 @@ runs:
         # action's own dogfood workflow, testing an unreleased branch)
         # resolves immediately instead of waiting on proxy cache lag.
         GOPROXY: direct
-      run: go install github.com/xchebila/repoaudit@${{ github.action_ref || github.sha }}
+      run: |
+        ref="${{ github.action_ref }}"
+        if [ -z "$ref" ]; then
+          # Same-repo (local path) invocation: github.action_ref is unset.
+          # On pull_request, github.sha is the ephemeral merge commit
+          # (refs/pull/N/merge) -- it's never pushed anywhere `go install`
+          # can resolve it from, so use the real head commit instead.
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            ref="${{ github.event.pull_request.head.sha }}"
+          else
+            ref="${{ github.sha }}"
+          fi
+        fi
+        go install "github.com/xchebila/repoaudit@$ref"
 
     - name: repoaudit diff (pull request)
       if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
