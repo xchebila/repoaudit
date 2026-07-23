@@ -12,10 +12,15 @@ import (
 	"github.com/xchebila/repoaudit/core"
 )
 
-const (
+// osvBatchURL and osvVulnURL are var, not const, so tests can point them at
+// an httptest.Server instead of the real OSV.dev API -- everything else
+// here stays const, this is the one seam the test suite needs.
+var (
 	osvBatchURL = "https://api.osv.dev/v1/querybatch"
 	osvVulnURL  = "https://api.osv.dev/v1/vulns/"
+)
 
+const (
 	// Short, per ADR 0004: this is opt-in, but a hung request still
 	// shouldn't hang the whole scan indefinitely. The batch query gets
 	// more time since one request can cover hundreds of dependencies;

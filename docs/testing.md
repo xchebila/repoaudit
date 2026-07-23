@@ -89,22 +89,28 @@ git clone --quiet https://github.com/prometheus/prometheus.git
 
 Le corpus de 20 repos sert aussi à valider `docker` et `cicd` contre du contenu réel, pas seulement des fixtures synthétiques — 9 des 20 ont au moins un vrai workflow GitHub Actions (axios, caddy, chalk, cobra, flask, gin, ohmyzsh, prometheus, requests ; 57 fichiers `.yml` au total). C'est ce qui a révélé que `gin/.github/workflows/codeql.yml` et `requests/.github/workflows/codeql-analysis.yml` contiennent tous les deux `@main`/`@master` dans un contexte qui n'est pas une référence d'action (`branches: [main]`, un commentaire) — la justification empirique du parsing YAML structurel plutôt que regex, voir `docs/decisions/0005-cicd-analyzer-scope.md`.
 
+## Règles internes (secrets/docker/cicd) : tests table-driven, depuis l'ADR 0014
+
+Le corpus réel valide la vitesse et l'absence de faux positifs à grande échelle ; il ne protège pas contre une régression sur une règle précise (une regex resserrée qui casse une exclusion, une logique multi-stage Dockerfile qui se dérègle). `analyzers/secrets/secrets_test.go`, `analyzers/docker/docker_test.go` et `analyzers/cicd/cicd_test.go` couvrent maintenant chaque règle et chaque exclusion de faux positif documentée en commentaire (suffixe `EXAMPLE` d'AWS, corps PEM tronqué, `FROM builder` multi-stage, tag `nonroot` distroless, `ADD` d'URL/archive, `permissions` en map scopée vs `write-all`, vérification booléenne d'un secret vs `echo` direct) — couverture 95-97% sur les trois packages. `analyzers/cicd/cicd_test.go` couvre aussi `CheckDependabot`, la fonction niveau-repo appelée directement par `cli/scan.go`.
+
 ## Dependency Scanner : test contre l'API OSV.dev réelle, pas de mock
 
 `analyzers/dependencies` fait de vrais appels réseau (`--deps`) — validé contre la vraie API `api.osv.dev`, jamais mockée. Deux dépendances volontairement anciennes/vulnérables servent de fixtures de référence pour ce chemin de code : `golang.org/x/text@v0.3.0` (Go) et `urllib3==1.24.1` (Python), toutes deux avec plusieurs CVE connues et couvrant les trois cas de mapping de sévérité (`database_specific.severity` direct, heuristique CVSS, fallback Medium — voir `docs/decisions/0006-dependency-scanner-scope.md`).
 
 `gin` (57 dépendances) et `prometheus` (1075 dépendances sur 5 `go.sum`) du corpus servent aussi de test d'échelle réel pour ce chemin — c'est prometheus qui a révélé le plafond de batch OSV non documenté (1000 requêtes max) : sans le découpage en chunks, le check de dépendances échouait entièrement en silence sur ce repo, avec un message trompeur ("réseau indisponible").
 
-## Security Diff Mode : fixtures synthétiques pour la logique d'appariement
+Depuis l'ADR 0014, ce bug précis a aussi un test de non-régression automatisé : `TestQueryBatch_Chunking` (`analyzers/dependencies/osv_test.go`) rejoue le découpage en chunks contre un `httptest.Server` fake qui rejette toute requête de plus de 1000 dépendances — `osvBatchURL`/`osvVulnURL` sont des `var` (pas des `const`) précisément pour permettre ça, seul changement de code de production motivé par la testabilité. Le reste de la logique pure d'`osv.go` (dédup d'alias, mapping de sévérité, heuristique CVSS) est couvert dans le même fichier. La vraie API OSV.dev reste testée manuellement en pré-release, sans mock — c'est ce test-réseau réel qui a trouvé le plafond de batch en premier lieu ; le fake HTTP protège seulement la logique de chunking déjà découverte, il ne la remplace pas comme méthode de découverte de nouveaux bugs.
 
-`repoaudit diff` se valide surtout avec des repos synthétiques créés à la volée (`git init` + deux branches), pas le corpus des 20 repos — ce qui compte ici, c'est la logique d'appariement des findings entre deux refs, pas la détection elle-même (déjà couverte par les analyzers réutilisés). Quatre scénarios de référence à reproduire si on touche `analyzers/diffmode` :
-1. Un secret ajouté sur la branche → `NEW`.
-2. Un secret supprimé sur la branche → `FIXED`.
-3. Un problème préexistant sur les deux branches, non touché par la branche → absent du diff (pas `NEW`, pas `FIXED`).
-4. Un secret inchangé mais dont le numéro de ligne se décale (ajout de lignes sans rapport plus haut dans le même fichier) → absent du diff, pas de faux `NEW`+`FIXED`.
-5. Deux findings de même clé `(File, ID, Category)`, un supprimé → exactement 1 `FIXED`, pas 0 ni 2.
+## Security Diff Mode : fixtures Git générées en Go, plus le corpus pour la perf
 
-`prometheus` (clone complet, deux tags de version distants) sert de test de perf sur un vrai gros repo — voir `docs/benchmarks.md`.
+Les 5 scénarios ci-dessous étaient une checklist manuelle jusqu'à l'ADR 0014 — ce sont maintenant de vrais tests automatisés dans `analyzers/diffmode/diffmode_test.go`, contre des dépôts Git générés à la volée (`t.TempDir()` + `go-git`, pas de clone, pas de dépendance à `/tmp` qui a déjà disparu une fois) :
+1. Un secret ajouté sur la branche → `NEW` (`TestDiff_NewSecret`).
+2. Un secret supprimé sur la branche → `FIXED` (`TestDiff_FixedSecret`).
+3. Un problème préexistant sur les deux branches, non touché par la branche → absent du diff (`TestDiff_PreexistingIssueIsNotReported`).
+4. Un secret inchangé mais dont le numéro de ligne se décale → absent du diff, pas de faux `NEW`+`FIXED` (`TestDiff_LineShiftDoesNotFalselyReport`).
+5. Deux findings de même clé `(File, ID, Category)`, un supprimé → exactement 1 `FIXED` (`TestDiff_CountAwarePairing`).
+
+`prometheus` (clone complet, deux tags de version distants) reste la référence pour le test de perf sur un vrai gros repo — voir `docs/benchmarks.md`. Le corpus réel et les fixtures générées ne se remplacent pas : l'un valide la performance/les faux positifs sur du contenu réel, l'autre valide la logique pure d'appariement de façon déterministe et rapide.
 
 ## Plugin System : plugin de référence en Python, pas seulement du Go
 
