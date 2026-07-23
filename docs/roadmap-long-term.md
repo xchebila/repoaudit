@@ -2,11 +2,11 @@
 
 Ce document couvre ce qui vient après le v1.0 (Phases 1-5, voir `vision.md`).
 
-**Différence de nature avec vision.md** : les Phases 1-5 avaient chacune un scope technique clair, un critère de sortie mesurable, et un ordre imposé par les dépendances entre elles. Rien ici n'a ce niveau de certitude — ce sont des directions, pas des engagements. Un seul item (GitHub Action) est assez mûr pour être cadré comme une vraie phase ; les quatre autres restent au niveau "direction + risque à trancher avant de commencer", volontairement, pour ne pas donner une fausse impression de planning détaillé sur des sujets encore ouverts.
+**Différence de nature avec vision.md** : les Phases 1-5 avaient chacune un scope technique clair, un critère de sortie mesurable, et un ordre imposé par les dépendances entre elles. Rien ici n'a ce niveau de certitude au départ — ce sont des directions, pas des engagements. Deux items (GitHub Action, CI multi-plateforme) étaient assez mûrs pour être cadrés comme de vraies phases, et sont maintenant faits ; les trois restants restent au niveau "direction + risque à trancher avant de commencer", volontairement, pour ne pas donner une fausse impression de planning détaillé sur des sujets encore ouverts.
 
 ---
 
-## ✅ Prêt à cadrer comme une phase — GitHub Action officiel
+## ✅ Fait — GitHub Action officiel
 
 ### Scope MVP
 
@@ -25,11 +25,16 @@ Ce document couvre ce qui vient après le v1.0 (Phases 1-5, voir `vision.md`).
 
 Contrairement au Plugin System, il n'y a pas de code tiers non fiable à isoler ici — l'action exécute le binaire officiel, publié par le mainteneur du projet, dans l'environnement CI de l'utilisateur qui l'a explicitement choisi. Pas de nouvelle surface de risque à trancher avant de coder.
 
-### Critère de sortie
+### Critère de sortie — validé
 
-- Fonctionne sur un repo GitHub public réel en moins de 10 minutes de setup pour un utilisateur qui découvre l'action pour la première fois
-- `fail-on-new: true` fait échouer le check GitHub exactement comme `repoaudit diff` en local (même code de sortie, même sémantique)
-- Testé sur au moins un repo du corpus existant (Phase 1) en conditions CI réelles, pas seulement en local
+- `fail-on-new: true` fait échouer le check GitHub exactement comme `repoaudit diff` en local (même code de sortie, même sémantique) — vérifié par un vrai run CI, pas seulement en local.
+- Testé sur ce repo lui-même en conditions CI réelles via `.github/workflows/repoaudit-self-check.yml` (les trois chemins : PR/diff, push/scan, `workflow_dispatch`) — deux vrais bugs trouvés et corrigés en cours de route (SHA de merge éphémère, fraîcheur de sum.golang.org). Voir [docs/decisions/0011-github-action.md](decisions/0011-github-action.md).
+
+---
+
+## ✅ Fait — Intégration CI multi-plateforme (GitLab, Jenkins)
+
+Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas de GitLab CI/CD Component, pas de Jenkins Shared Library) — décision et raisons dans [docs/decisions/0012-multi-ci-integrations.md](decisions/0012-multi-ci-integrations.md). Contrairement au GitHub Action, ni le snippet GitLab ni le snippet Jenkins n'ont tourné sur une vraie instance — écart de validation assumé et déclaré, pas cette même garantie de "testé en CI réelle".
 
 ---
 
@@ -57,14 +62,6 @@ Contrairement au Plugin System, il n'y a pas de code tiers non fiable à isoler 
 
 ---
 
-### Intégration CI multi-plateforme (GitLab, Jenkins)
-
-**Statut** : suite naturelle du GitHub Action, à ne pas commencer avant lui.
-
-**Pourquoi après, pas en parallèle** : le pattern (binaire + `diff`/`--format json`) doit d'abord être validé et éprouvé sur GitHub Action en conditions réelles. Le dupliquer sur GitLab/Jenkins avant d'avoir des retours d'usage réels risque de figer un mauvais design sur trois plateformes à la fois plutôt qu'une.
-
----
-
 ### SaaS optionnel
 
 **Statut** : à requestionner avant même de commencer à cadrer quoi que ce soit.
@@ -77,8 +74,8 @@ Contrairement au Plugin System, il n'y a pas de code tiers non fiable à isoler 
 
 ## Ordre recommandé
 
-1. **GitHub Action** — aucune décision d'architecture en suspens, prêt à démarrer
-2. **CI multi-plateforme** — après le GitHub Action, une fois le pattern validé
+1. ✅ **GitHub Action** — fait
+2. ✅ **CI multi-plateforme** — fait
 3. **Marketplace de plugins** — après un audit de conception dédié (format Phase 4)
 4. **Extension VSCode** — après avoir tranché wrapper léger vs réimplémentation
 5. **SaaS optionnel** — après avoir répondu à "pourquoi", pas avant

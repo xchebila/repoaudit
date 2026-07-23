@@ -108,6 +108,8 @@ A composite action (`action.yml` at the repo root) wraps the CLI — no new chec
 
 On a `pull_request` event it runs `repoaudit diff <base-sha> <head-sha>` (the actual commit SHAs from the event payload, not branch names); on any other event (e.g. a push to `main`) it runs `repoaudit scan . --format json` and uploads the result as a build artifact. `fail-on-new: false` reports without failing the build. The action does its own `actions/checkout` with `fetch-depth: 0` and installs `repoaudit` itself via `go install` — nothing needs to be pre-installed on the runner. See [docs/decisions/0011-github-action.md](docs/decisions/0011-github-action.md) for why (and for the module rename to `github.com/xchebila/repoaudit` that `go install` required). `.github/workflows/repoaudit-self-check.yml` runs this action against the repo's own PRs and pushes, so it's proven against real CI, not just YAML that parses.
 
+Not on GitHub Actions? See [docs/ci-integrations.md](docs/ci-integrations.md) for a GitLab CI and a Jenkins snippet doing the same `diff`/`scan --format json` split — documented copy-paste examples rather than a published artifact (see [docs/decisions/0012-multi-ci-integrations.md](docs/decisions/0012-multi-ci-integrations.md) for why), and not validated against a real GitLab/Jenkins run the way `action.yml` is.
+
 ## Example output
 
 ```
