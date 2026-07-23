@@ -106,6 +106,31 @@ Le corpus de 20 repos sert aussi à valider `docker` et `cicd` contre du contenu
 
 `prometheus` (clone complet, deux tags de version distants) sert de test de perf sur un vrai gros repo — voir `docs/benchmarks.md`.
 
+## Plugin System : plugin de référence en Python, pas seulement du Go
+
+`docs/examples/reference-plugin.py` — écrit en Python, délibérément, pour valider honnêtement la promesse "le protocole n'a rien de spécifique à Go" plutôt que de la laisser comme une affirmation non vérifiée dans `docs/plugin-protocol.md`. Accepte un flag `--misbehave=timeout|crash|fatal|error` pour rejouer chacun des scénarios de défaillance ci-dessous à la demande — pas destiné aux vrais auteurs de plugins, uniquement à la suite de test.
+
+Six scénarios de référence à reproduire si on touche `analyzers/plugin` :
+1. Fonctionnement normal → le finding du plugin apparaît dans le rapport, avec l'`id` correctement préfixé par `plugin_name`.
+2. Erreur fatale au handshake (`--misbehave=fatal`) → plugin ignoré au chargement, scan continue normalement.
+3. Erreur non-fatale sur un fichier (`--misbehave=error`) → warning par fichier concerné, plugin reste actif pour les fichiers suivants.
+4. Timeout (`--misbehave=timeout`, le script dort 30s) → abandon après exactement 5s, pas de nouvelle tentative sur les fichiers suivants.
+5. Crash (`--misbehave=crash`, `sys.exit(1)`) → détecté immédiatement (EOF sur stdout), pas d'attente du timeout.
+6. Deux plugins en même temps, un qui crashe et un qui fonctionne → isolation confirmée, le crash de l'un n'affecte pas les findings de l'autre.
+
+`--plugin` prend un chemin d'exécutable, pas une commande avec arguments (un vrai plugin est autonome, il n'a pas besoin de flags CLI) — pour tester chaque mode il faut donc un petit wrapper par mode plutôt que de passer `--misbehave=X` directement :
+
+```bash
+for mode in fatal crash timeout error; do
+  cat > /tmp/reference-$mode.sh <<EOF
+#!/bin/sh
+exec python3 "$(pwd)/docs/examples/reference-plugin.py" --misbehave=$mode
+EOF
+  chmod +x /tmp/reference-$mode.sh
+done
+./repoaudit scan . --plugin /tmp/reference-crash.sh
+```
+
 ## Critères de sortie mesurables (déjà validés)
 
 - **Vitesse < 5s** (critère de sortie du MVP, vision.md) : validé sur les 20 repos du corpus Phase 1 (max observé : ~1.5s, fastapi/svelte) et sur les clones complets en mode par défaut (max observé : ~3s, prometheus — budget git-history de 1.5s + scan working-tree + overhead process). `--full-history` n'est **pas** soumis à ce critère : c'est un mode explicitement "sans budget", jusqu'à 18 minutes observées sur prometheus (18k commits) — voir `docs/decisions/0002-git-history-depth.md`.
