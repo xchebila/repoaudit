@@ -1,8 +1,10 @@
 # 🌍 Roadmap long terme — RepoAudit
 
+**Arrêt délibéré, pas un simple "à suivre"** : depuis le GitHub Action et les intégrations CI, le projet est considéré stable — v1.0 + GitHub Action + intégrations CI est l'état de référence, tant qu'aucun vrai point de friction ou vraie demande ne se présente. Ça vaut pour n'importe quel item de cette liste (marketplace de plugins, extension VSCode, SaaS) ou une idée qui n'y figure même pas encore. Ce n'est pas une pause temporaire en attendant de dérouler chaque item dans l'ordre "quand on aura le temps" — c'est un choix délibéré de ne pas avancer cette liste par défaut, et de ne la reprendre que sur un signal réel, pas sur l'inertie de la roadmap elle-même.
+
 Ce document couvre ce qui vient après le v1.0 (Phases 1-5, voir `vision.md`).
 
-**Différence de nature avec vision.md** : les Phases 1-5 avaient chacune un scope technique clair, un critère de sortie mesurable, et un ordre imposé par les dépendances entre elles. Rien ici n'a ce niveau de certitude au départ — ce sont des directions, pas des engagements. Deux items (GitHub Action, CI multi-plateforme) étaient assez mûrs pour être cadrés comme de vraies phases, et sont maintenant faits ; les trois restants restent au niveau "direction + risque à trancher avant de commencer", volontairement, pour ne pas donner une fausse impression de planning détaillé sur des sujets encore ouverts.
+**Différence de nature avec vision.md** : les Phases 1-5 avaient chacune un scope technique clair, un critère de sortie mesurable, et un ordre imposé par les dépendances entre elles. Rien ici n'a ce niveau de certitude au départ — ce sont des directions, pas des engagements. Deux items (GitHub Action, CI multi-plateforme) étaient assez mûrs pour être cadrés comme de vraies phases, et sont maintenant faits. Le marketplace de plugins et l'extension VSCode sont en pause, faute de besoin réel identifié pour l'un comme pour l'autre — pas juste "pas encore audité", une distinction volontaire pour ne pas laisser croire qu'un audit de conception est simplement la prochaine étape logique. Le critère de pause ne dépend pas du niveau de risque de la feature (le marketplace est risqué, l'extension VSCode ne l'est pas) : seule l'existence d'un besoin réel compte, sinon la même dérive que les Non-Goals du vision.md existent pour empêcher se reproduit ici, juste plus lentement. Le SaaS reste au niveau "direction + question à trancher avant de commencer".
 
 ---
 
@@ -38,29 +40,29 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 ---
 
-## 🧭 Directions à auditer avant de coder
+## ⏸️ En pause — en attente d'un besoin réel
 
 ### Marketplace de plugins
 
-**Statut** : nécessite un audit de conception avant tout code, comme Phase 4.
+**Statut** : en pause, pas "à faire". Pas d'audit de conception lancé, faute de besoin identifié.
 
-**Pourquoi** : "découverte/installation de plugins" a été explicitement mis hors scope lors de l'audit Phase 4 (ADR 0008) — c'est exactement cette question qui revient ici, pas une nouvelle idée indépendante.
+**Pourquoi la pause plutôt qu'un audit** : le protocole d'isolation (Phase 4) a été construit pour que le mainteneur (ou un contributeur) écrive ses propres règles — jamais dans un but de découverte/publication par des tiers ("découverte/installation de plugins" a d'ailleurs été explicitement mis hors scope lors de l'audit Phase 4, ADR 0008). Rien depuis n'est venu d'un vrai besoin ("quelqu'un veut publier un plugin") — c'est une direction anticipée, pas une demande. Un marketplace introduit en plus le risque le plus sérieux de toute cette roadmap : une question de confiance sur du code découvert et installé (signature, review, sandboxing du marketplace lui-même), que le protocole d'exécution de Phase 4 ne résout pas du tout — l'isoler protège contre un plugin buggé ou malveillant *une fois lancé*, pas contre la découverte d'un plugin déjà compromis. Construire cette surface de risque sans utilisateur en face serait aller à l'encontre du principe déjà appliqué partout ailleurs dans ce projet : ne pas construire avant que ce soit nécessaire (cf. Non-Goals, vision.md).
 
-**Risque central à trancher** : le protocole d'isolation (Phase 4) protège contre un plugin buggé ou malveillant *une fois lancé*, mais rien ne protège contre la découverte et l'installation d'un plugin déjà compromis. Publier un plugin sur un marketplace introduit une question de confiance (signature, review, sandboxing du marketplace lui-même) que le protocole d'exécution ne résout pas.
-
-**Ne pas commencer** sans repasser par le même format que l'audit Phase 4 : questions posées explicitement, réponses vérifiées empiriquement quand possible, décision actée dans un ADR avant la première ligne de code.
+**Condition de sortie de pause** : un vrai signal d'usage — quelqu'un qui veut publier un plugin, ou un cas d'usage concret remonté. Le jour où ce signal existe, repasser par le même format que l'audit Phase 4 : questions posées explicitement, réponses vérifiées empiriquement quand possible, décision actée dans un ADR avant la première ligne de code.
 
 ---
 
 ### Extension VSCode
 
-**Statut** : pas commencé.
+**Statut** : en pause, pas "à faire". Pas commencé, faute de besoin identifié.
 
-**Différence structurelle avec le reste du projet** : stack technique différente (TypeScript, API VSCode) plutôt qu'une extension naturelle du code Go existant — pas juste une nouvelle feature, une nouvelle compétence à mobiliser.
+**Pourquoi la pause, alors que le risque technique est faible ici** : contrairement au marketplace, il n'y a pas de code tiers ni de question de confiance — un wrapper léger autour du binaire CLI existant serait cohérent avec "core minimal, ne pas dupliquer" et peu risqué techniquement. Mais le critère de pause ne porte pas sur le niveau de risque d'une feature, seulement sur l'existence d'un vrai besoin — sinon on reproduit exactement la dérive que la section Non-Goals du vision.md existe pour empêcher : construire une feature "raisonnable" prise isolément, sans jamais se demander si quelqu'un l'a demandée. Rien à ce jour n'indique un vrai besoin d'intégration IDE — c'est une direction rédigée dans ce document, pas une demande reçue.
 
-**Question à trancher avant de commencer** : est-ce un wrapper léger autour du binaire CLI existant (comme le GitHub Action packaging), ou une vraie réimplémentation de logique côté extension ? La première option est beaucoup moins risquée et cohérente avec le principe "core minimal, ne pas dupliquer" déjà appliqué partout ailleurs dans le projet.
+**Question qui resterait à trancher, le jour où un besoin apparaît** : wrapper léger autour du binaire CLI existant (comme le packaging du GitHub Action), ou une vraie réimplémentation de logique côté extension (TypeScript, API VSCode — une compétence différente du reste du projet, 100% Go jusqu'ici) ? La première option reste la plus cohérente avec le principe déjà appliqué partout ailleurs dans le projet.
 
 ---
+
+## 🧭 Directions à auditer avant de coder
 
 ### SaaS optionnel
 
@@ -76,6 +78,6 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 1. ✅ **GitHub Action** — fait
 2. ✅ **CI multi-plateforme** — fait
-3. **Marketplace de plugins** — après un audit de conception dédié (format Phase 4)
-4. **Extension VSCode** — après avoir tranché wrapper léger vs réimplémentation
+3. ⏸️ **Marketplace de plugins** — en pause, en attente d'un besoin réel identifié (pas un audit de conception en cours)
+4. ⏸️ **Extension VSCode** — en pause, en attente d'un besoin réel identifié (le risque technique est faible, mais ce n'est pas le critère)
 5. **SaaS optionnel** — après avoir répondu à "pourquoi", pas avant
