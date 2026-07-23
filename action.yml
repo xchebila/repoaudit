@@ -54,6 +54,11 @@ runs:
         # action's own dogfood workflow, testing an unreleased branch)
         # resolves immediately instead of waiting on proxy cache lag.
         GOPROXY: direct
+        # sum.golang.org can 500 on a pseudo-version for a commit that
+        # was only just pushed. Skipping it is safe here: this installs
+        # repoaudit itself from its own known repo, not a third-party
+        # dependency -- there's no supply chain to verify against.
+        GOSUMDB: 'off'
       run: |
         ref="${{ github.action_ref }}"
         if [ -z "$ref" ]; then

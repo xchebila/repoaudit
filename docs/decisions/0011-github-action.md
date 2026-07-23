@@ -30,6 +30,8 @@ Comme chaque décision de packaging/infra de ce projet, un YAML "qui compile" ne
 
 **Ce test a immédiatement trouvé un vrai bug**, invisible en local : sur un event `pull_request`, `github.sha` pointe vers le commit de merge éphémère que GitHub construit pour le run (`refs/pull/N/merge`) — un commit qui n'existe sur aucune branche du dépôt distant, donc jamais résolvable par `go install`. Le fallback (invocation locale, `github.action_ref` vide) doit distinguer l'event : `github.event.pull_request.head.sha` sur une PR (le vrai commit poussé), `github.sha` sinon (correct sur un `push`, où c'est bien le commit réel). Exactement le genre d'erreur que la discipline "valider en CI réelle, pas en local" de ce projet existe pour attraper.
 
+**Un deuxième bug, trouvé par le run suivant** : une fois le bon SHA résolu, `go install` échouait quand même — `sum.golang.org` renvoyait une 500 en tentant de vérifier le pseudo-version d'un commit tout juste poussé (le même type de problème de fraîcheur que `GOPROXY=direct` réglait déjà côté proxy, mais côté base de checksums, un mécanisme distinct). `GOSUMDB=off` sur cette même étape : sûr ici, puisque l'étape installe repoaudit depuis son propre dépôt connu, pas une dépendance tierce — aucune chaîne d'approvisionnement à vérifier. Sans rapport avec la vérification des dépendances auditées par `--deps` (qui passe par l'API OSV, pas par `cmd/go`).
+
 ## Conséquences
 
 - `fail-on-new` contrôle si l'action échoue (`continue-on-error` conditionnel), pas si repoaudit tourne — repoaudit tourne toujours, le choix ne porte que sur l'échec du build.
