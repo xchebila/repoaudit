@@ -9,5 +9,6 @@ func NewRootCmd() *cobra.Command {
 		Short: "Security sanity check for Git repositories",
 	}
 	root.AddCommand(newScanCmd())
+	root.AddCommand(newDiffCmd())
 	return root
 }

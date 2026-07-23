@@ -38,6 +38,14 @@ Without `--deps`, a repo with checkable manifests gets a one-line pointer instea
 
 Exits with code 1 if the security score drops below 70, so it can gate a CI pipeline.
 
+`repoaudit diff` shows only what changed between two git refs — built for a pull request, where "what did this PR introduce or fix" matters more than a static score for the whole repo:
+
+```bash
+./repoaudit diff main feature-branch
+```
+
+Findings present on both refs (pre-existing issues the branch didn't touch) are never shown — only the delta. Exits with code 1 if anything NEW shows up, at any severity.
+
 ## Example output
 
 ```
@@ -130,12 +138,24 @@ SECURITY SCORE: 47/100  (F)
 
 A finding without a `context:` line has an official severity rating from OSV.dev's source database (usually a GitHub Security Advisory); one *with* a `context:` line is either a rough estimate from a raw CVSS vector, or a plain Medium default because OSV had no severity data at all for that record — both are disclosed rather than presented as equally certain.
 
+`repoaudit diff main feature-branch` on a branch that fixes an old Dockerfile issue but introduces a secret:
+
+```
+✔️  FIXED  - No non-root USER set (Dockerfile:1)
+
+❌ NEW CRITICAL - AWS Access Key ID exposed (config.py:2)
+   An AWS access key ID was found hardcoded in this file. Combined with its
+   secret key, it grants immediate programmatic access to this AWS account.
+   fix: Revoke this key in the AWS IAM console, then load credentials from
+   environment variables or a secrets manager (AWS Secrets Manager, Vault).
+```
+
 ## Status
 
 Phase 1 — secrets scanner: hardcoded credentials in the working tree (AWS, GitHub, Stripe, Slack, Discord, OpenAI keys, private key blocks, raw JWTs, committed `.env` files), with `.gitignore` support and a severity-weighted score.
 
 Phase 2 — git history analyzer (the same secret rules applied to every commit's changed files, so a secret that was committed and later deleted still gets caught), Docker analyzer (unpinned/`latest` base images, `ADD` used where `COPY` would do, containers with no non-root `USER`), and CI/CD analyzer (`permissions: write-all`, actions pinned to `@main`/`@master`, secrets echoed into build logs, missing Dependabot config). Secrets hardcoded in a Dockerfile's or workflow's `ENV`/`ARG` are already caught by the secrets rules above — they're just text files like any other.
 
-Phase 3 — dependency vulnerability scanning for `go.sum` and `requirements.txt` against OSV.dev, opt-in via `--deps` (the only network-dependent check RepoAudit has; the default scan stays 100% local and deterministic — see `docs/decisions/0004-dependency-scanner-network.md`). CI/CD Analyzer above is also Phase 3. Security Diff Mode (`repoaudit diff main feature-branch`) is next.
+Phase 3 — dependency vulnerability scanning for `go.sum` and `requirements.txt` against OSV.dev, opt-in via `--deps` (the only network-dependent check RepoAudit has; the default scan stays 100% local and deterministic — see `docs/decisions/0004-dependency-scanner-network.md`); and Security Diff Mode (`repoaudit diff <ref-a> <ref-b>`), which reuses the same secrets/Docker/CI/CD rules against two git refs read directly from git (no checkout) and reports only what changed. Phase 4 (plugin system) is next.
 
 See [vision.md](docs/vision.md) for the full roadmap, [docs/decisions/](docs/decisions/) for design rationale, [docs/testing.md](docs/testing.md) for the test corpus and exit criteria, and [docs/benchmarks.md](docs/benchmarks.md) for the timing history behind them.

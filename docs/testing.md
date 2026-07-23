@@ -95,6 +95,17 @@ Le corpus de 20 repos sert aussi à valider `docker` et `cicd` contre du contenu
 
 `gin` (57 dépendances) et `prometheus` (1075 dépendances sur 5 `go.sum`) du corpus servent aussi de test d'échelle réel pour ce chemin — c'est prometheus qui a révélé le plafond de batch OSV non documenté (1000 requêtes max) : sans le découpage en chunks, le check de dépendances échouait entièrement en silence sur ce repo, avec un message trompeur ("réseau indisponible").
 
+## Security Diff Mode : fixtures synthétiques pour la logique d'appariement
+
+`repoaudit diff` se valide surtout avec des repos synthétiques créés à la volée (`git init` + deux branches), pas le corpus des 20 repos — ce qui compte ici, c'est la logique d'appariement des findings entre deux refs, pas la détection elle-même (déjà couverte par les analyzers réutilisés). Quatre scénarios de référence à reproduire si on touche `analyzers/diffmode` :
+1. Un secret ajouté sur la branche → `NEW`.
+2. Un secret supprimé sur la branche → `FIXED`.
+3. Un problème préexistant sur les deux branches, non touché par la branche → absent du diff (pas `NEW`, pas `FIXED`).
+4. Un secret inchangé mais dont le numéro de ligne se décale (ajout de lignes sans rapport plus haut dans le même fichier) → absent du diff, pas de faux `NEW`+`FIXED`.
+5. Deux findings de même clé `(File, ID, Category)`, un supprimé → exactement 1 `FIXED`, pas 0 ni 2.
+
+`prometheus` (clone complet, deux tags de version distants) sert de test de perf sur un vrai gros repo — voir `docs/benchmarks.md`.
+
 ## Critères de sortie mesurables (déjà validés)
 
 - **Vitesse < 5s** (critère de sortie du MVP, vision.md) : validé sur les 20 repos du corpus Phase 1 (max observé : ~1.5s, fastapi/svelte) et sur les clones complets en mode par défaut (max observé : ~3s, prometheus — budget git-history de 1.5s + scan working-tree + overhead process). `--full-history` n'est **pas** soumis à ce critère : c'est un mode explicitement "sans budget", jusqu'à 18 minutes observées sur prometheus (18k commits) — voir `docs/decisions/0002-git-history-depth.md`.
