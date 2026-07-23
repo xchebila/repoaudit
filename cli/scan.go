@@ -12,6 +12,7 @@ import (
 	"repoaudit/analyzers/dependencies"
 	"repoaudit/analyzers/docker"
 	"repoaudit/analyzers/githistory"
+	"repoaudit/analyzers/plugin"
 	"repoaudit/analyzers/secrets"
 	"repoaudit/core"
 	"repoaudit/output"
@@ -21,6 +22,7 @@ func newScanCmd() *cobra.Command {
 	var fullHistory bool
 	var noHistory bool
 	var checkDeps bool
+	var pluginPaths []string
 
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
@@ -35,7 +37,12 @@ look like a hung job.
 
 Dependency vulnerability checking (go.sum, requirements.txt via OSV.dev)
 is off by default too, for a different reason: it's the only check here
-that needs the network. --deps enables it explicitly.`,
+that needs the network. --deps enables it explicitly.
+
+--plugin runs an external plugin executable alongside the built-in rules
+(see docs/plugin-protocol.md). A plugin that crashes, times out, or
+misbehaves is dropped for the rest of the scan with a warning — it never
+fails the whole scan.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if fullHistory && noHistory {
@@ -59,7 +66,30 @@ that needs the network. --deps enables it explicitly.`,
 				return fmt.Errorf("%s is not a directory", path)
 			}
 
-			scanner := core.NewScanner(path, secrets.New(), docker.New(), cicd.New())
+			analyzers := []core.Analyzer{secrets.New(), docker.New(), cicd.New()}
+			var loadedPlugins []*plugin.Plugin
+			for _, p := range pluginPaths {
+				loaded, err := plugin.Load(p)
+				if err != nil {
+					fmt.Fprintf(cmd.ErrOrStderr(), "⚠️  %v — skipping this plugin\n", err)
+					continue
+				}
+				analyzers = append(analyzers, loaded)
+				loadedPlugins = append(loadedPlugins, loaded)
+			}
+			closePlugins := func() {
+				for _, p := range loadedPlugins {
+					p.Close()
+				}
+			}
+			// Covers every normal return path (including the error
+			// returns below). os.Exit further down skips deferred calls
+			// entirely, so that path calls closePlugins explicitly too —
+			// closing lets a well-behaved plugin see stdin close and exit
+			// cleanly, instead of relying on process teardown to do it.
+			defer closePlugins()
+
+			scanner := core.NewScanner(path, analyzers...)
 			for _, w := range scanner.Warnings() {
 				fmt.Fprintf(cmd.ErrOrStderr(), "⚠️  gitignore: %s\n", w)
 			}
@@ -119,6 +149,7 @@ that needs the network. --deps enables it explicitly.`,
 			output.WriteReport(cmd.OutOrStdout(), findings, score)
 
 			if score.Value < 70 {
+				closePlugins()
 				os.Exit(1)
 			}
 			return nil
@@ -128,6 +159,7 @@ that needs the network. --deps enables it explicitly.`,
 	cmd.Flags().BoolVar(&fullHistory, "full-history", false, "scan entire reachable history + dangling commits, no time budget — can take several minutes on large repos, avoid in CI without a generous timeout")
 	cmd.Flags().BoolVar(&noHistory, "no-history", false, "skip git history scanning, working tree only")
 	cmd.Flags().BoolVar(&checkDeps, "deps", false, "check go.sum/requirements.txt dependencies against known vulnerabilities via OSV.dev — requires network, off by default")
+	cmd.Flags().StringArrayVar(&pluginPaths, "plugin", nil, "path to an external plugin executable (see docs/plugin-protocol.md) — repeatable")
 
 	return cmd
 }

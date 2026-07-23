@@ -46,6 +46,14 @@ Exits with code 1 if the security score drops below 70, so it can gate a CI pipe
 
 Findings present on both refs (pre-existing issues the branch didn't touch) are never shown — only the delta. Exits with code 1 if anything NEW shows up, at any severity.
 
+External plugins run as a separate process (never in-process Go code — see [docs/plugin-protocol.md](docs/plugin-protocol.md) for why), speaking a small JSON protocol over stdin/stdout:
+
+```bash
+./repoaudit scan . --plugin /path/to/your-plugin
+```
+
+A plugin that crashes, times out (5s per file), or sends a malformed response is dropped for the rest of the scan with a warning — it never fails the whole scan. A plugin only ever receives file bytes, never a path it could resolve itself; see [docs/examples/reference-plugin.py](docs/examples/reference-plugin.py) for a complete, runnable reference implementation in Python (the protocol has nothing Go-specific about it).
+
 ## Example output
 
 ```
@@ -156,6 +164,8 @@ Phase 1 — secrets scanner: hardcoded credentials in the working tree (AWS, Git
 
 Phase 2 — git history analyzer (the same secret rules applied to every commit's changed files, so a secret that was committed and later deleted still gets caught), Docker analyzer (unpinned/`latest` base images, `ADD` used where `COPY` would do, containers with no non-root `USER`), and CI/CD analyzer (`permissions: write-all`, actions pinned to `@main`/`@master`, secrets echoed into build logs, missing Dependabot config). Secrets hardcoded in a Dockerfile's or workflow's `ENV`/`ARG` are already caught by the secrets rules above — they're just text files like any other.
 
-Phase 3 — dependency vulnerability scanning for `go.sum` and `requirements.txt` against OSV.dev, opt-in via `--deps` (the only network-dependent check RepoAudit has; the default scan stays 100% local and deterministic — see `docs/decisions/0004-dependency-scanner-network.md`); and Security Diff Mode (`repoaudit diff <ref-a> <ref-b>`), which reuses the same secrets/Docker/CI/CD rules against two git refs read directly from git (no checkout) and reports only what changed. Phase 4 (plugin system) is next.
+Phase 3 — dependency vulnerability scanning for `go.sum` and `requirements.txt` against OSV.dev, opt-in via `--deps` (the only network-dependent check RepoAudit has; the default scan stays 100% local and deterministic — see `docs/decisions/0004-dependency-scanner-network.md`); and Security Diff Mode (`repoaudit diff <ref-a> <ref-b>`), which reuses the same secrets/Docker/CI/CD rules against two git refs read directly from git (no checkout) and reports only what changed.
+
+Phase 4 — plugin system (`--plugin`): external detection rules run as a separate process speaking a small JSON protocol, never as in-process Go code — see [docs/plugin-protocol.md](docs/plugin-protocol.md) for the contract and `docs/decisions/0008-plugin-system-scope.md` for why.
 
 See [vision.md](docs/vision.md) for the full roadmap, [docs/decisions/](docs/decisions/) for design rationale, [docs/testing.md](docs/testing.md) for the test corpus and exit criteria, and [docs/benchmarks.md](docs/benchmarks.md) for the timing history behind them.
