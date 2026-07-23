@@ -246,3 +246,5 @@ Phase 5 — reporting: `--format json` for machine-readable output, and `--forma
 Post-v1.0 — a GitHub Action (see above) is the first item off [docs/roadmap-long-term.md](docs/roadmap-long-term.md): pure packaging around `diff`/`scan --format json`, no new CLI feature.
 
 See [vision.md](docs/vision.md) for the full v1.0 roadmap, [docs/roadmap-long-term.md](docs/roadmap-long-term.md) for what's planned after it, [docs/decisions/](docs/decisions/) for design rationale, [docs/testing.md](docs/testing.md) for the test corpus and exit criteria, and [docs/benchmarks.md](docs/benchmarks.md) for the timing history behind them.
+
+Found a security issue in RepoAudit itself (not a false positive/negative in a detection rule — see [SECURITY.md](SECURITY.md) for that distinction)? See [SECURITY.md](SECURITY.md) for how to report it privately.
