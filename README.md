@@ -38,6 +38,14 @@ Without `--deps`, a repo with checkable manifests gets a one-line pointer instea
 
 Exits with code 1 if the security score drops below 70, so it can gate a CI pipeline.
 
+`--format json` gives the same findings and score as a machine-readable document instead of colored terminal output (diagnostics like `.gitignore` warnings still go to stderr, never mixed into stdout):
+
+```bash
+./repoaudit scan . --format json
+```
+
+See [docs/decisions/0009-json-output-schema.md](docs/decisions/0009-json-output-schema.md) for the schema and why it's versioned separately from RepoAudit's internal Go types.
+
 `repoaudit diff` shows only what changed between two git refs — built for a pull request, where "what did this PR introduce or fix" matters more than a static score for the whole repo:
 
 ```bash
@@ -167,5 +175,7 @@ Phase 2 — git history analyzer (the same secret rules applied to every commit'
 Phase 3 — dependency vulnerability scanning for `go.sum` and `requirements.txt` against OSV.dev, opt-in via `--deps` (the only network-dependent check RepoAudit has; the default scan stays 100% local and deterministic — see `docs/decisions/0004-dependency-scanner-network.md`); and Security Diff Mode (`repoaudit diff <ref-a> <ref-b>`), which reuses the same secrets/Docker/CI/CD rules against two git refs read directly from git (no checkout) and reports only what changed.
 
 Phase 4 — plugin system (`--plugin`): external detection rules run as a separate process speaking a small JSON protocol, never as in-process Go code — see [docs/plugin-protocol.md](docs/plugin-protocol.md) for the contract and `docs/decisions/0008-plugin-system-scope.md` for why.
+
+Phase 5 (in progress) — reporting: `--format json` for machine-readable output is done; an HTML dashboard is next.
 
 See [vision.md](docs/vision.md) for the full roadmap, [docs/decisions/](docs/decisions/) for design rationale, [docs/testing.md](docs/testing.md) for the test corpus and exit criteria, and [docs/benchmarks.md](docs/benchmarks.md) for the timing history behind them.

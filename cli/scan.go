@@ -23,6 +23,7 @@ func newScanCmd() *cobra.Command {
 	var noHistory bool
 	var checkDeps bool
 	var pluginPaths []string
+	var format string
 
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
@@ -47,6 +48,9 @@ fails the whole scan.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if fullHistory && noHistory {
 				return fmt.Errorf("--full-history and --no-history are mutually exclusive")
+			}
+			if format != "cli" && format != "json" {
+				return fmt.Errorf("--format must be \"cli\" or \"json\", got %q", format)
 			}
 
 			path := "."
@@ -146,7 +150,13 @@ fails the whole scan.`,
 			}
 
 			score := core.ComputeCategoryScore(findings)
-			output.WriteReport(cmd.OutOrStdout(), findings, score)
+			if format == "json" {
+				if err := output.WriteJSONReport(cmd.OutOrStdout(), findings, score); err != nil {
+					return fmt.Errorf("writing JSON report: %w", err)
+				}
+			} else {
+				output.WriteReport(cmd.OutOrStdout(), findings, score)
+			}
 
 			if score.Value < 70 {
 				closePlugins()
@@ -160,6 +170,7 @@ fails the whole scan.`,
 	cmd.Flags().BoolVar(&noHistory, "no-history", false, "skip git history scanning, working tree only")
 	cmd.Flags().BoolVar(&checkDeps, "deps", false, "check go.sum/requirements.txt dependencies against known vulnerabilities via OSV.dev — requires network, off by default")
 	cmd.Flags().StringArrayVar(&pluginPaths, "plugin", nil, "path to an external plugin executable (see docs/plugin-protocol.md) — repeatable")
+	cmd.Flags().StringVar(&format, "format", "cli", `output format: "cli" (default, colored terminal output) or "json" (machine-readable, see docs/decisions/0009-json-output-schema.md)`)
 
 	return cmd
 }
