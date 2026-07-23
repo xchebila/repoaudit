@@ -6,6 +6,8 @@ RepoAudit is a 10-second security sanity check for Git repositories. It doesn't 
 
 Signal over noise: no 500 warnings, just what's actionable. Every finding explains *why* it's dangerous and *how* to fix it.
 
+*This README is everything you need to use RepoAudit. [`docs/`](docs/) explains the* why *behind each design decision — worth a look if you're curious or contributing, not required just to run the tool.*
+
 ## Install / build
 
 **Homebrew** (macOS or Linux):
