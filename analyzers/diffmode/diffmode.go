@@ -112,7 +112,7 @@ func scanTree(tree *object.Tree) ([]core.Finding, error) {
 
 		fc := core.FileContext{Path: f.Name, Content: []byte(content)}
 		for _, a := range analyzerList {
-			findings = append(findings, a.Run(fc)...)
+			findings = append(findings, core.RunAnalyzer(a, fc)...)
 		}
 		return nil
 	})
