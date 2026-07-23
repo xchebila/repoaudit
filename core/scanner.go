@@ -109,7 +109,7 @@ func (s *Scanner) Scan() ([]Finding, error) {
 
 		ctx := FileContext{Path: rel, Content: content}
 		for _, a := range s.Analyzers {
-			findings = append(findings, a.Run(ctx)...)
+			findings = append(findings, RunAnalyzer(a, ctx)...)
 		}
 		return nil
 	})
