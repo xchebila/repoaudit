@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"repoaudit/analyzers/diffmode"
-	"repoaudit/output"
+	"github.com/xchebila/repoaudit/analyzers/diffmode"
+	"github.com/xchebila/repoaudit/output"
 )
 
 func newDiffCmd() *cobra.Command {

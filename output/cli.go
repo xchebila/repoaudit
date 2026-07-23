@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/core"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"repoaudit/analyzers/diffmode"
+	"github.com/xchebila/repoaudit/analyzers/diffmode"
 )
 
 // WriteDiffReport prints only what changed between two refs — vision.md's

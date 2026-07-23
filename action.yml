@@ -1,0 +1,100 @@
+name: 'RepoAudit'
+description: >
+  Security sanity check for git repos: secrets, Docker, CI/CD, and
+  dependency vulnerabilities. Runs `repoaudit diff` on a pull request
+  (reports only what the PR introduces or fixes), or `repoaudit scan`
+  otherwise (reports the repo's absolute score).
+author: 'xchebila'
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  fail-on-new:
+    description: >
+      Whether this action fails (non-zero) when repoaudit reports a
+      problem: on a pull_request event, any NEW finding from
+      `repoaudit diff`; otherwise, a security score below 70 from
+      `repoaudit scan`. Set to false to report without failing the build.
+    required: false
+    default: 'true'
+  deps:
+    description: >
+      Pass --deps to `repoaudit scan` on non-PR runs, checking pinned
+      dependencies against OSV.dev (requires network). Ignored on
+      pull_request runs, which always use `repoaudit diff` (no --deps
+      equivalent — see README).
+    required: false
+    default: 'false'
+  go-version:
+    description: 'Go toolchain version used to `go install` repoaudit.'
+    required: false
+    default: '1.25'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout full history
+      # fetch-depth: 0 so both the PR base and head commits are always
+      # resolvable for `repoaudit diff`, regardless of the calling
+      # workflow's own checkout settings.
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - name: Install repoaudit
+      shell: bash
+      env:
+        # Bypass the module proxy so a just-pushed commit (e.g. this
+        # action's own dogfood workflow, testing an unreleased branch)
+        # resolves immediately instead of waiting on proxy cache lag.
+        GOPROXY: direct
+        # sum.golang.org can 500 on a pseudo-version for a commit that
+        # was only just pushed. Skipping it is safe here: this installs
+        # repoaudit itself from its own known repo, not a third-party
+        # dependency -- there's no supply chain to verify against.
+        GOSUMDB: 'off'
+      run: |
+        ref="${{ github.action_ref }}"
+        if [ -z "$ref" ]; then
+          # Same-repo (local path) invocation: github.action_ref is unset.
+          # On pull_request, github.sha is the ephemeral merge commit
+          # (refs/pull/N/merge) -- it's never pushed anywhere `go install`
+          # can resolve it from, so use the real head commit instead.
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            ref="${{ github.event.pull_request.head.sha }}"
+          else
+            ref="${{ github.sha }}"
+          fi
+        fi
+        go install "github.com/xchebila/repoaudit@$ref"
+
+    - name: repoaudit diff (pull request)
+      if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+      shell: bash
+      continue-on-error: ${{ inputs.fail-on-new == 'false' }}
+      run: repoaudit diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+
+    - name: repoaudit scan (push / other events)
+      if: github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      shell: bash
+      continue-on-error: ${{ inputs.fail-on-new == 'false' }}
+      run: |
+        if [ "${{ inputs.deps }}" = "true" ]; then
+          repoaudit scan . --deps --format json > repoaudit-report.json
+        else
+          repoaudit scan . --format json > repoaudit-report.json
+        fi
+        cat repoaudit-report.json
+
+    - name: Upload report artifact
+      if: ${{ !cancelled() && github.event_name != 'pull_request' && github.event_name != 'pull_request_target' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: repoaudit-report
+        path: repoaudit-report.json

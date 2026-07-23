@@ -18,10 +18,10 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 
-	"repoaudit/analyzers/cicd"
-	"repoaudit/analyzers/docker"
-	"repoaudit/analyzers/secrets"
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/analyzers/cicd"
+	"github.com/xchebila/repoaudit/analyzers/docker"
+	"github.com/xchebila/repoaudit/analyzers/secrets"
+	"github.com/xchebila/repoaudit/core"
 )
 
 // ErrNotAGitRepo mirrors githistory's error: Security Diff Mode is

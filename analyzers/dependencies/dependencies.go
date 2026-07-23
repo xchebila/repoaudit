@@ -16,7 +16,7 @@ import (
 	"regexp"
 	"strings"
 
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/core"
 )
 
 // Dependency is one package+version pinned by a manifest file.

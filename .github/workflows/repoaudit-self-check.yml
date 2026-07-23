@@ -1,0 +1,38 @@
+name: RepoAudit self-check
+
+# Dogfoods action.yml against this repo's own history: `repoaudit diff`
+# on pull requests, `repoaudit scan --deps` otherwise. This is also the
+# only realistic way to validate the action end-to-end (real event
+# payloads, real runner, real `go install` from GitHub) rather than
+# trusting the YAML compiles.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  self-check:
+    runs-on: ubuntu-latest
+    steps:
+      # A local `uses: ./` action must already be present on disk before
+      # this step runs — this checkout is what makes action.yml
+      # resolvable; the action's own checkout step then re-checks-out
+      # with fetch-depth: 0 (redundant here, but that's the price of
+      # testing the exact YAML consumers use).
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          # true on a PR (diff mode): fail on anything this PR newly
+          # introduces. false on push/workflow_dispatch (scan mode):
+          # pre-existing findings (e.g. known-vulnerable transitive
+          # dependencies, tracked separately) shouldn't turn every push
+          # to main red for a problem that push didn't introduce -- the
+          # same "don't re-flag what's already there" reasoning diff
+          # mode itself is built on.
+          fail-on-new: ${{ github.event_name == 'pull_request' }}
+          deps: true

@@ -16,6 +16,8 @@ cd repoaudit
 go build -o repoaudit .
 ```
 
+Or, with `make`: `make build` (same command), `make check` (`go build`, `go vet`, `gofmt -l`, `go test` — the same checklist every PR in this project runs before merge), `make test`, `make clean`.
+
 ## Usage
 
 ```bash
@@ -92,6 +94,19 @@ A plugin that crashes, times out (5s per file), or sends a malformed response is
 `repoaudit diff <ref-a> <ref-b>` takes no flags — see the note above on what it doesn't cover yet.
 
 Every mode that produces a score (`scan` in any `--format`) exits with code 1 if the score is below 70; `diff` exits with code 1 if anything is `NEW`, regardless of score or severity.
+
+## GitHub Action
+
+A composite action (`action.yml` at the repo root) wraps the CLI — no new checks, pure packaging:
+
+```yaml
+- uses: xchebila/repoaudit@main
+  with:
+    fail-on-new: true   # pin to a release tag instead of @main once one exists
+    deps: true          # optional: pass --deps to scan runs (ignored on pull_request)
+```
+
+On a `pull_request` event it runs `repoaudit diff <base-sha> <head-sha>` (the actual commit SHAs from the event payload, not branch names); on any other event (e.g. a push to `main`) it runs `repoaudit scan . --format json` and uploads the result as a build artifact. `fail-on-new: false` reports without failing the build. The action does its own `actions/checkout` with `fetch-depth: 0` and installs `repoaudit` itself via `go install` — nothing needs to be pre-installed on the runner. See [docs/decisions/0011-github-action.md](docs/decisions/0011-github-action.md) for why (and for the module rename to `github.com/xchebila/repoaudit` that `go install` required). `.github/workflows/repoaudit-self-check.yml` runs this action against the repo's own PRs and pushes, so it's proven against real CI, not just YAML that parses.
 
 ## Example output
 
@@ -209,4 +224,6 @@ Phase 4 — plugin system (`--plugin`): external detection rules run as a separa
 
 Phase 5 — reporting: `--format json` for machine-readable output, and `--format html` for a self-contained dashboard with a per-category score breakdown alongside the total. This closes vision.md's roadmap to v1.0.
 
-See [vision.md](docs/vision.md) for the full roadmap, [docs/decisions/](docs/decisions/) for design rationale, [docs/testing.md](docs/testing.md) for the test corpus and exit criteria, and [docs/benchmarks.md](docs/benchmarks.md) for the timing history behind them.
+Post-v1.0 — a GitHub Action (see above) is the first item off [docs/roadmap-long-term.md](docs/roadmap-long-term.md): pure packaging around `diff`/`scan --format json`, no new CLI feature.
+
+See [vision.md](docs/vision.md) for the full v1.0 roadmap, [docs/roadmap-long-term.md](docs/roadmap-long-term.md) for what's planned after it, [docs/decisions/](docs/decisions/) for design rationale, [docs/testing.md](docs/testing.md) for the test corpus and exit criteria, and [docs/benchmarks.md](docs/benchmarks.md) for the timing history behind them.

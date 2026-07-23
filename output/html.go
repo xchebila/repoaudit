@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/core"
 )
 
 // WriteHTMLReport renders a self-contained HTML dashboard: no external
