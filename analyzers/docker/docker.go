@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/core"
 )
 
 type Analyzer struct{}

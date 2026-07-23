@@ -18,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/core"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"repoaudit/cli"
+	"github.com/xchebila/repoaudit/cli"
 )
 
 func main() {

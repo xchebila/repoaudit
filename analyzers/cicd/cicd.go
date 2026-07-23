@@ -14,7 +14,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/core"
 )
 
 type Analyzer struct{}

@@ -8,14 +8,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"repoaudit/analyzers/cicd"
-	"repoaudit/analyzers/dependencies"
-	"repoaudit/analyzers/docker"
-	"repoaudit/analyzers/githistory"
-	"repoaudit/analyzers/plugin"
-	"repoaudit/analyzers/secrets"
-	"repoaudit/core"
-	"repoaudit/output"
+	"github.com/xchebila/repoaudit/analyzers/cicd"
+	"github.com/xchebila/repoaudit/analyzers/dependencies"
+	"github.com/xchebila/repoaudit/analyzers/docker"
+	"github.com/xchebila/repoaudit/analyzers/githistory"
+	"github.com/xchebila/repoaudit/analyzers/plugin"
+	"github.com/xchebila/repoaudit/analyzers/secrets"
+	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/repoaudit/output"
 )
 
 func newScanCmd() *cobra.Command {

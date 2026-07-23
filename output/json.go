@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/core"
 )
 
 // schemaVersion versions the JSON output independently of core.Finding's

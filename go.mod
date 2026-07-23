@@ -1,4 +1,4 @@
-module repoaudit
+module github.com/xchebila/repoaudit
 
 go 1.25.0
 

@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"sort"
 
-	"repoaudit/core"
+	"github.com/xchebila/repoaudit/core"
 )
 
 type rule struct {
