@@ -1,6 +1,8 @@
 # 🛡️ RepoAudit
 
-RepoAudit is a 10-second security sanity check for Git repositories. It doesn't analyze code quality — it detects real-world security mistakes that leak data or break production: committed secrets, exposed keys, tokens hardcoded in source, risky Dockerfile patterns, and CI/CD workflow misconfigurations.
+**v1.0.0** — the full [vision.md](docs/vision.md) roadmap (Phases 1–5) is implemented: secrets, git history, Docker, CI/CD, dependency vulnerabilities, a diff mode for PRs, an external plugin system, and CLI/JSON/HTML reporting.
+
+RepoAudit is a 10-second security sanity check for Git repositories. It doesn't analyze code quality — it detects real-world security mistakes that leak data or break production: committed secrets, exposed keys, tokens hardcoded in source, risky Dockerfile patterns, CI/CD workflow misconfigurations, and known-vulnerable dependencies.
 
 Signal over noise: no 500 warnings, just what's actionable. Every finding explains *why* it's dangerous and *how* to fix it.
 
@@ -27,6 +29,8 @@ By default, `scan` checks both the working tree and recent git history (secrets 
 ./repoaudit scan . --full-history   # no time budget: walk all reachable history, plus dangling commits from deleted branches
 ./repoaudit scan . --no-history     # skip history entirely, working tree only
 ```
+
+(`--full-history` and `--no-history` are mutually exclusive — passing both is a usage error, not a silent override.)
 
 Dependency vulnerability checking (`go.sum`, `requirements.txt` against OSV.dev) is also off by default — it's the only check that needs the network:
 
@@ -62,13 +66,32 @@ See [docs/decisions/0010-html-dashboard.md](docs/decisions/0010-html-dashboard.m
 
 Findings present on both refs (pre-existing issues the branch didn't touch) are never shown — only the delta. Exits with code 1 if anything NEW shows up, at any severity.
 
+`diff` compares two point-in-time snapshots — it doesn't walk the commits between them, so a secret introduced and removed again entirely between `ref-a` and `ref-b` isn't caught here (that's `--full-history`'s job on `scan`, a different kind of check). `diff` also has no `--deps`, `--plugin`, or `--format` equivalent yet — it always runs the secrets/Docker/CI/CD rules and always prints colored terminal output.
+
 External plugins run as a separate process (never in-process Go code — see [docs/plugin-protocol.md](docs/plugin-protocol.md) for why), speaking a small JSON protocol over stdin/stdout:
 
 ```bash
 ./repoaudit scan . --plugin /path/to/your-plugin
+./repoaudit scan . --plugin /path/to/plugin-a --plugin /path/to/plugin-b   # --plugin is repeatable
 ```
 
-A plugin that crashes, times out (5s per file), or sends a malformed response is dropped for the rest of the scan with a warning — it never fails the whole scan. A plugin only ever receives file bytes, never a path it could resolve itself; see [docs/examples/reference-plugin.py](docs/examples/reference-plugin.py) for a complete, runnable reference implementation in Python (the protocol has nothing Go-specific about it).
+A plugin that crashes, times out (5s per file), or sends a malformed response is dropped for the rest of the scan with a warning — it never fails the whole scan, and one misbehaving plugin has no effect on any other. A plugin only ever receives file bytes, never a path it could resolve itself; see [docs/examples/reference-plugin.py](docs/examples/reference-plugin.py) for a complete, runnable reference implementation in Python (the protocol has nothing Go-specific about it).
+
+### Flags reference
+
+`repoaudit scan [path]` — defaults to `.` if `path` is omitted:
+
+| Flag | Default | What it does |
+|---|---|---|
+| `--full-history` | off | No time budget on git history scanning; also sweeps dangling commits from deleted branches. Mutually exclusive with `--no-history`. |
+| `--no-history` | off | Skip git history scanning entirely, working tree only. Mutually exclusive with `--full-history`. |
+| `--deps` | off | Check `go.sum`/`requirements.txt` against OSV.dev — the only flag here that touches the network. |
+| `--plugin <path>` | none | Run an external plugin executable alongside the built-in rules. Repeatable. |
+| `--format <cli\|json\|html>` | `cli` | Output format. `json` and `html` both still respect the exit-code-70 threshold below. |
+
+`repoaudit diff <ref-a> <ref-b>` takes no flags — see the note above on what it doesn't cover yet.
+
+Every mode that produces a score (`scan` in any `--format`) exits with code 1 if the score is below 70; `diff` exits with code 1 if anything is `NEW`, regardless of score or severity.
 
 ## Example output
 
