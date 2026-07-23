@@ -3,10 +3,11 @@ package cli
 
 import "github.com/spf13/cobra"
 
-func NewRootCmd() *cobra.Command {
+func NewRootCmd(version string) *cobra.Command {
 	root := &cobra.Command{
-		Use:   "repoaudit",
-		Short: "Security sanity check for Git repositories",
+		Use:     "repoaudit",
+		Short:   "Security sanity check for Git repositories",
+		Version: version,
 	}
 	root.AddCommand(newScanCmd())
 	root.AddCommand(newDiffCmd())

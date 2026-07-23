@@ -7,8 +7,12 @@ import (
 	"github.com/xchebila/repoaudit/cli"
 )
 
+// version is overridden at build time via -ldflags "-X main.version=...";
+// left as "dev" for a plain `go build`/`go run` with no ldflags.
+var version = "dev"
+
 func main() {
-	if err := cli.NewRootCmd().Execute(); err != nil {
+	if err := cli.NewRootCmd(version).Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
