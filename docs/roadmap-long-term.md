@@ -1,6 +1,6 @@
 # 🌍 Roadmap long terme — RepoAudit
 
-**Arrêt délibéré, pas un simple "à suivre"** : depuis le GitHub Action et les intégrations CI, le projet est considéré stable — v1.0 + GitHub Action + intégrations CI est l'état de référence, tant qu'aucun vrai point de friction ou vraie demande ne se présente. Ça vaut pour n'importe quel item de cette liste (marketplace de plugins, extension VSCode, SaaS) ou une idée qui n'y figure même pas encore. Ce n'est pas une pause temporaire en attendant de dérouler chaque item dans l'ordre "quand on aura le temps" — c'est un choix délibéré de ne pas avancer cette liste par défaut, et de ne la reprendre que sur un signal réel, pas sur l'inertie de la roadmap elle-même.
+**Arrêt délibéré, pas un simple "à suivre"** : depuis le GitHub Action et les intégrations CI, le projet est considéré stable — v1.0 + GitHub Action + intégrations CI est l'état de référence, tant qu'aucun vrai point de friction ou vraie demande ne se présente. Ça vaut pour n'importe quel item de cette liste (marketplace de plugins, extension VSCode, SaaS) ou une idée qui n'y figure même pas encore. Ce n'est pas une pause temporaire en attendant de dérouler chaque item dans l'ordre "quand on aura le temps" — c'est un choix délibéré de ne pas avancer cette liste par défaut, et de ne la reprendre que sur un signal réel, pas sur l'inertie de la roadmap elle-même. La distribution via Homebrew tap, ajoutée après cet arrêt, est exactement ce genre de signal réel — une demande explicite, pas une reprise de la liste par défaut.
 
 Ce document couvre ce qui vient après le v1.0 (Phases 1-5, voir `vision.md`).
 
@@ -37,6 +37,22 @@ Contrairement au Plugin System, il n'y a pas de code tiers non fiable à isoler 
 ## ✅ Fait — Intégration CI multi-plateforme (GitLab, Jenkins)
 
 Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas de GitLab CI/CD Component, pas de Jenkins Shared Library) — décision et raisons dans [docs/decisions/0012-multi-ci-integrations.md](decisions/0012-multi-ci-integrations.md). Contrairement au GitHub Action, ni le snippet GitLab ni le snippet Jenkins n'ont tourné sur une vraie instance — écart de validation assumé et déclaré, pas cette même garantie de "testé en CI réelle".
+
+---
+
+## 🚧 En cours — Distribution via Homebrew tap
+
+**N'apparaissait dans aucun des deux documents de roadmap avant cette entrée** — ni `vision.md` ni ce fichier. Ajouté explicitement ici avant tout code, pour ne pas perdre la décision comme le corpus de test de la Phase 1 a failli l'être.
+
+**Statut** : en cours (formula en préparation), pas encore fait.
+
+**Objectif** : installer `repoaudit` sans cloner le repo ni avoir Go préinstallé manuellement — Homebrew gère la dépendance de build lui-même. Fonctionne sur Linux et macOS (Homebrew, pas seulement macOS).
+
+**Scope** : nouveau repo séparé `homebrew-repoaudit` (convention Homebrew), un seul fichier `Formula/repoaudit.rb`. La formula pointe vers le tarball du tag `v1.0.0` déjà publié, build avec `go build` (`depends_on "go" => :build`) — pas de binaires précompilés, pas de GoReleaser, même raisonnement que pour le GitHub Action (ADR 0011) : pas de besoin prouvé pour cette infra maintenant.
+
+**Prérequis découvert avant de coder** : `--version` n'existait pas sur le binaire (vérifié empiriquement : `unknown flag: --version`) — nécessaire pour le test minimal de la formula (`brew test`). Ajouté dans ce même travail plutôt qu'après coup.
+
+**Condition pour marquer "fait"** : formula testée en local (`brew install --build-from-source`) avant d'être poussée sur le repo `homebrew-repoaudit`, et commande d'installation documentée dans le README principal à côté de `go install`.
 
 ---
 
