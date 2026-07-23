@@ -8,7 +8,22 @@ Signal over noise: no 500 warnings, just what's actionable. Every finding explai
 
 ## Install / build
 
-Requires Go 1.24+.
+**Homebrew** (macOS or Linux):
+
+```bash
+brew tap xchebila/repoaudit
+brew install repoaudit
+```
+
+Builds from source (`depends_on "go" => :build`) — no precompiled binaries, no separate release pipeline to maintain, same reasoning as the GitHub Action below. See [xchebila/homebrew-repoaudit](https://github.com/xchebila/homebrew-repoaudit).
+
+**`go install`**, if you already have Go 1.24+:
+
+```bash
+go install github.com/xchebila/repoaudit@v1.0.0   # or @latest, or a commit SHA
+```
+
+**From source**:
 
 ```bash
 git clone git@github.com:xchebila/repoaudit.git
@@ -16,7 +31,7 @@ cd repoaudit
 go build -o repoaudit .
 ```
 
-Or, with `make`: `make build` (same command), `make check` (`go build`, `go vet`, `gofmt -l`, `go test` — the same checklist every PR in this project runs before merge), `make test`, `make clean`.
+Or, with `make`: `make build` (same command, plus an embedded version via `--version`), `make check` (`go build`, `go vet`, `gofmt -l`, `go test` — the same checklist every PR in this project runs before merge), `make test`, `make clean`.
 
 ## Usage
 

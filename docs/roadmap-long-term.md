@@ -40,19 +40,19 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 ---
 
-## 🚧 En cours — Distribution via Homebrew tap
+## ✅ Fait — Distribution via Homebrew tap
 
 **N'apparaissait dans aucun des deux documents de roadmap avant cette entrée** — ni `vision.md` ni ce fichier. Ajouté explicitement ici avant tout code, pour ne pas perdre la décision comme le corpus de test de la Phase 1 a failli l'être.
 
-**Statut** : en cours (formula en préparation), pas encore fait.
-
 **Objectif** : installer `repoaudit` sans cloner le repo ni avoir Go préinstallé manuellement — Homebrew gère la dépendance de build lui-même. Fonctionne sur Linux et macOS (Homebrew, pas seulement macOS).
 
-**Scope** : nouveau repo séparé `homebrew-repoaudit` (convention Homebrew), un seul fichier `Formula/repoaudit.rb`. La formula pointe vers le tarball du tag `v1.0.0` déjà publié, build avec `go build` (`depends_on "go" => :build`) — pas de binaires précompilés, pas de GoReleaser, même raisonnement que pour le GitHub Action (ADR 0011) : pas de besoin prouvé pour cette infra maintenant.
+**Scope** : repo séparé [xchebila/homebrew-repoaudit](https://github.com/xchebila/homebrew-repoaudit) (convention Homebrew), un seul fichier `Formula/repoaudit.rb`. La formula pointe vers le tarball du tag `v1.0.0` déjà publié, build avec `go build` (`depends_on "go" => :build`) — pas de binaires précompilés, pas de GoReleaser, même raisonnement que pour le GitHub Action (ADR 0011) : pas de besoin prouvé pour cette infra maintenant.
 
-**Prérequis découvert avant de coder** : `--version` n'existait pas sur le binaire (vérifié empiriquement : `unknown flag: --version`) — nécessaire pour le test minimal de la formula (`brew test`). Ajouté dans ce même travail plutôt qu'après coup.
+**Prérequis découvert avant de coder** : `--version` n'existait pas sur le binaire (vérifié empiriquement : `unknown flag: --version`) — ajouté dans ce même travail plutôt qu'après coup (ADR 0013).
 
-**Condition pour marquer "fait"** : formula testée en local (`brew install --build-from-source`) avant d'être poussée sur le repo `homebrew-repoaudit`, et commande d'installation documentée dans le README principal à côté de `go install`.
+**Écart découvert en cours de route** : le tag `v1.0.0` précède l'ajout de `--version` — la formula ne peut donc pas s'en servir comme test. Le `test do` utilise `repoaudit scan --help` à la place (le repli déjà envisagé), pas de nouveau tag coupé juste pour ça. À corriger quand un tag postérieur à ADR 0013 existera.
+
+**Validé, pas juste écrit** : `brew tap` + `brew install --build-from-source` + `brew test` exécutés réellement en local avant de pousser la formula — les trois verts. Commande d'installation documentée dans le README principal, à côté de `go install` (qui n'existait pas non plus comme instruction directe utilisateur avant cette même entrée — ajouté au passage).
 
 ---
 
