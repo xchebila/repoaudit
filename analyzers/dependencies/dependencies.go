@@ -70,24 +70,38 @@ func parseGoSum(path, manifestRel string) []Dependency {
 		return nil
 	}
 
-	// go.sum lists both a module hash line and a go.mod hash line per
-	// version ("v1.2.3" and "v1.2.3/go.mod") — deduping on module@version
-	// avoids querying (and, if vulnerable, reporting) the same dependency
-	// twice.
-	seen := map[string]bool{}
+	// go.sum has two kinds of line per module version: a real content line
+	// ("v1.2.3 h1:...", the module's actual zip, fetched and compiled into
+	// the build) and a go.mod-only line ("v1.2.3/go.mod h1:...", just that
+	// version's go.mod file, read to resolve the dependency graph but
+	// never fetched or built). A version can appear as go.mod-only forever
+	// with no real content line at all -- e.g. an old version a transitive
+	// dependency's own go.mod once required, superseded everywhere by a
+	// newer one MVS actually selected. `go mod tidy` does not remove these
+	// lines; they're legitimate graph-verification bookkeeping, not stale
+	// cruft, confirmed empirically.
+	//
+	// Treating every distinct version mentioned anywhere in go.sum as an
+	// in-use dependency (the previous version of this function) reports
+	// versions that were never actually built: real repo, real finding —
+	// golang.org/x/text@v0.3.6 and gopkg.in/yaml.v2@v2.2.2 kept showing up
+	// as vulnerable in this project's own --deps scan after bumping to
+	// x/text@v0.40.0, because their go.mod-only lines never disappear. One
+	// of the two (yaml.v2) isn't even reachable from this project's import
+	// graph at all (`go mod why -m gopkg.in/yaml.v2` confirms) -- it's
+	// entirely a phantom finding. Skipping go.mod-only lines is the fix:
+	// only a real content line means a version was actually selected and
+	// compiled in.
 	var deps []Dependency
 	for _, line := range strings.Split(string(content), "\n") {
 		fields := strings.Fields(line)
 		if len(fields) < 2 {
 			continue
 		}
-		module, version := fields[0], strings.TrimSuffix(fields[1], "/go.mod")
-		key := module + "@" + version
-		if seen[key] {
+		if strings.HasSuffix(fields[1], "/go.mod") {
 			continue
 		}
-		seen[key] = true
-		deps = append(deps, Dependency{Name: module, Version: version, Ecosystem: "Go", Manifest: manifestRel})
+		deps = append(deps, Dependency{Name: fields[0], Version: fields[1], Ecosystem: "Go", Manifest: manifestRel})
 	}
 	return deps
 }
