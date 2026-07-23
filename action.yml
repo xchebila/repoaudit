@@ -72,7 +72,7 @@ runs:
             ref="${{ github.sha }}"
           fi
         fi
-        go install "github.com/xchebila/repoaudit@$ref"
+        go install -ldflags "-X main.version=$ref" "github.com/xchebila/repoaudit@$ref"
 
     - name: repoaudit diff (pull request)
       if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'

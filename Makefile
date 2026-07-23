@@ -1,7 +1,9 @@
 .PHONY: build test check clean
 
+VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+
 build:
-	go build -o repoaudit .
+	go build -ldflags "-X main.version=$(VERSION)" -o repoaudit .
 
 test:
 	go test ./...
