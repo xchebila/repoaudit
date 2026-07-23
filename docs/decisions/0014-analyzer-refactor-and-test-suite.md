@@ -24,8 +24,16 @@ Le corpus de 20 repos publics (`docs/testing.md`) reste la référence pour vali
 
 Seul changement de code de production motivé uniquement par la testabilité : ces deux URLs étaient des `const`, donc impossibles à rediriger vers un `httptest.Server` sans modifier `osv.go`. Passées en `var` (le reste du fichier reste `const`) — un seul point d'entrée pour les tests (`analyzers/dependencies/osv_test.go`), sans toucher à aucune signature de fonction publique. `TestQueryBatch_Chunking` est le test de non-régression direct du vrai bug trouvé contre l'API réelle (plafond de 1000 requêtes/batch, silencieusement dépassé sur prometheus) — la vraie API OSV.dev reste testée manuellement en pré-release (voir `docs/testing.md`), ce test-ci protège seulement la logique de chunking elle-même.
 
+## Décision : golden files pour `output/json.go` et `output/html.go`
+
+Protège les schémas de sortie versionnés (ADR 0009/0010) contre une régression silencieuse. `output/golden_test.go` définit une fixture `goldenFindings` unique, partagée par les deux formats, couvrant chaque champ notable (`commit_hash` rempli, `context` rempli, sévérités et catégories différentes). `output/testdata/report.{json,html}.golden` sont les références ; `go test ./output/... -update` les régénère après un changement de schéma volontaire.
+
+**Un problème réel à résoudre, pas juste en théorie** : `WriteHTMLReport` embarque un timestamp (`time.Now()`), donc une comparaison d'octets stricte échouerait à chaque run. `normalizeHTMLTimestamp` remplace la date réelle par une valeur fixe avant comparaison (à l'écriture du golden comme à la lecture) — le seul champ dont la valeur doit légitimement changer à chaque exécution est neutralisé, pas ignoré aveuglément.
+
+Validé comme un vrai test de non-régression, pas supposé : un titre cassé dans le template HTML fait échouer `TestWriteHTMLReport_Golden`, confirmé en cassant volontairement le template puis en le restaurant, avant de considérer le test fiable.
+
 ## Conséquences
 
-- Couverture après ce travail : `secrets` 96.9%, `docker` 97.2%, `cicd` 95.2%, `diffmode` 78.6%, `dependencies` (logique pure d'`osv.go`) couverte — voir `docs/testing.md` pour le détail par fichier.
+- Couverture après ce travail : `secrets` 96.9%, `docker` 97.2%, `cicd` 95.2%, `diffmode` 78.6%, `dependencies` (logique pure d'`osv.go`) couverte, `output` (JSON + HTML) couvert par golden files — voir `docs/testing.md` pour le détail par fichier.
 - Pas d'objectif de pourcentage global : un `cli` fin ou du code de câblage n'a pas besoin d'être poussé à un chiffre arbitraire pour que ce travail ait rempli son objectif.
 - `githistory` et `plugin` restent sans test automatisé après cette PR — hors scope de cette itération, candidats naturels pour la suivante.

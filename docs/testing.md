@@ -152,6 +152,8 @@ done
 
 Fixture de référence pour couvrir tous les champs simultanément : un mini-repo avec une clé de test ajoutée puis supprimée dans `testdata/` — produit un finding avec `commit_hash` réel (git-history) *et* `context` réel (chemin test/fixture) en même temps, pour confirmer que chaque champ traverse la sérialisation correctement.
 
+Depuis l'ADR 0014, cette même fixture multi-champs est aussi un golden file automatisé : `output/golden_test.go` définit `goldenFindings` (un finding par champ notable : `commit_hash` rempli, `context` rempli, sévérités différentes, catégories différentes), et `output/json_test.go`/`output/html_test.go` comparent la sortie réelle à `output/testdata/report.{json,html}.golden`. Validité syntaxique du JSON toujours vérifiée directement (`encoding/json.Unmarshal`), pas seulement par comparaison au golden. `go test ./output/... -update` régénère les golden files après un changement de schéma volontaire. Testé pour de vrai, pas supposé : casser temporairement un titre dans le template HTML fait échouer `TestWriteHTMLReport_Golden` comme attendu, confirmé avant d'écrire cette note.
+
 ## Dashboard HTML : premier test Go automatisé du projet, plus une vérification structurelle du rendu
 
 `core/scoring_test.go` — premier fichier `_test.go` de ce projet, écrit spécifiquement pour un invariant que la vérification CLI habituelle ne couvre pas bien : la garantie qu'aucun finding n'est compté deux fois ni oublié quand `ComputeCategoryBreakdown` partitionne par catégorie. Deux tests :
@@ -159,8 +161,8 @@ Fixture de référence pour couvrir tous les champs simultanément : un mini-rep
 2. `TestComputeCategoryBreakdown_TotalIsNotAnAggregateOfCategoryScores` — un CRITICAL dans une catégorie, des LOW ailleurs ; le score total doit diverger nettement de la moyenne naïve des catégories (35 contre 78 sur la fixture retenue), preuve que le total n'est jamais dérivé du breakdown.
 
 Le HTML généré lui-même se valide en deux temps, aucun des deux par simple lecture de code :
-- Bien-formé structurellement : tags équilibrés, vérifié avec le parseur HTML de la stdlib Python (`html.parser`) sur une fixture multi-catégories (secrets + docker + cicd).
-- Rendu visuel inspecté via un Artifact publié temporairement — cet environnement n'a pas d'outil de capture d'écran, donc la vérification pixel-perfect (alignement, espacement) reste à la charge de la review humaine ; l'automatisé couvre la structure et la logique couleur/statut, pas la mise en page.
+- Bien-formé structurellement : tags équilibrés. Vérifié une première fois manuellement avec le parseur HTML de la stdlib Python (`html.parser`) ; depuis l'ADR 0014, `assertBalancedHTML` (`output/html_test.go`) fait la même vérification en Go à chaque run de `go test`, sans dépendance externe.
+- Rendu visuel inspecté via un Artifact publié temporairement — cet environnement n'a pas d'outil de capture d'écran, donc la vérification pixel-perfect (alignement, espacement) reste à la charge de la review humaine ; l'automatisé couvre la structure et la logique couleur/statut, pas la mise en page. Le timestamp `generated <date>` du template est normalisé avant comparaison au golden file (`normalizeHTMLTimestamp`), sinon chaque run produirait un diff sur la seule valeur qui doit changer à chaque run.
 
 ## Où sont les chiffres
 
