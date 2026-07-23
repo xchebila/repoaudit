@@ -27,5 +27,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./
         with:
-          fail-on-new: true
+          # true on a PR (diff mode): fail on anything this PR newly
+          # introduces. false on push/workflow_dispatch (scan mode):
+          # pre-existing findings (e.g. known-vulnerable transitive
+          # dependencies, tracked separately) shouldn't turn every push
+          # to main red for a problem that push didn't introduce -- the
+          # same "don't re-flag what's already there" reasoning diff
+          # mode itself is built on.
+          fail-on-new: ${{ github.event_name == 'pull_request' }}
           deps: true
