@@ -2,7 +2,7 @@
 
 Ce document couvre ce qui vient après le v1.0 (Phases 1-5, voir `vision.md`).
 
-**Différence de nature avec vision.md** : les Phases 1-5 avaient chacune un scope technique clair, un critère de sortie mesurable, et un ordre imposé par les dépendances entre elles. Rien ici n'a ce niveau de certitude au départ — ce sont des directions, pas des engagements. Deux items (GitHub Action, CI multi-plateforme) étaient assez mûrs pour être cadrés comme de vraies phases, et sont maintenant faits ; les trois restants restent au niveau "direction + risque à trancher avant de commencer", volontairement, pour ne pas donner une fausse impression de planning détaillé sur des sujets encore ouverts.
+**Différence de nature avec vision.md** : les Phases 1-5 avaient chacune un scope technique clair, un critère de sortie mesurable, et un ordre imposé par les dépendances entre elles. Rien ici n'a ce niveau de certitude au départ — ce sont des directions, pas des engagements. Deux items (GitHub Action, CI multi-plateforme) étaient assez mûrs pour être cadrés comme de vraies phases, et sont maintenant faits. Le marketplace de plugins est en pause, faute de besoin réel identifié — pas juste "pas encore audité", une distinction volontaire pour ne pas laisser croire qu'un audit de conception est simplement la prochaine étape logique. Les deux restants (extension VSCode, SaaS) restent au niveau "direction + risque à trancher avant de commencer", pour ne pas donner une fausse impression de planning détaillé sur des sujets encore ouverts.
 
 ---
 
@@ -38,19 +38,19 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 ---
 
-## 🧭 Directions à auditer avant de coder
+## ⏸️ En pause — en attente d'un besoin réel
 
 ### Marketplace de plugins
 
-**Statut** : nécessite un audit de conception avant tout code, comme Phase 4.
+**Statut** : en pause, pas "à faire". Pas d'audit de conception lancé, faute de besoin identifié.
 
-**Pourquoi** : "découverte/installation de plugins" a été explicitement mis hors scope lors de l'audit Phase 4 (ADR 0008) — c'est exactement cette question qui revient ici, pas une nouvelle idée indépendante.
+**Pourquoi la pause plutôt qu'un audit** : le protocole d'isolation (Phase 4) a été construit pour que le mainteneur (ou un contributeur) écrive ses propres règles — jamais dans un but de découverte/publication par des tiers ("découverte/installation de plugins" a d'ailleurs été explicitement mis hors scope lors de l'audit Phase 4, ADR 0008). Rien depuis n'est venu d'un vrai besoin ("quelqu'un veut publier un plugin") — c'est une direction anticipée, pas une demande. Un marketplace introduit en plus le risque le plus sérieux de toute cette roadmap : une question de confiance sur du code découvert et installé (signature, review, sandboxing du marketplace lui-même), que le protocole d'exécution de Phase 4 ne résout pas du tout — l'isoler protège contre un plugin buggé ou malveillant *une fois lancé*, pas contre la découverte d'un plugin déjà compromis. Construire cette surface de risque sans utilisateur en face serait aller à l'encontre du principe déjà appliqué partout ailleurs dans ce projet : ne pas construire avant que ce soit nécessaire (cf. Non-Goals, vision.md).
 
-**Risque central à trancher** : le protocole d'isolation (Phase 4) protège contre un plugin buggé ou malveillant *une fois lancé*, mais rien ne protège contre la découverte et l'installation d'un plugin déjà compromis. Publier un plugin sur un marketplace introduit une question de confiance (signature, review, sandboxing du marketplace lui-même) que le protocole d'exécution ne résout pas.
-
-**Ne pas commencer** sans repasser par le même format que l'audit Phase 4 : questions posées explicitement, réponses vérifiées empiriquement quand possible, décision actée dans un ADR avant la première ligne de code.
+**Condition de sortie de pause** : un vrai signal d'usage — quelqu'un qui veut publier un plugin, ou un cas d'usage concret remonté. Le jour où ce signal existe, repasser par le même format que l'audit Phase 4 : questions posées explicitement, réponses vérifiées empiriquement quand possible, décision actée dans un ADR avant la première ligne de code.
 
 ---
+
+## 🧭 Directions à auditer avant de coder
 
 ### Extension VSCode
 
@@ -76,6 +76,6 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 1. ✅ **GitHub Action** — fait
 2. ✅ **CI multi-plateforme** — fait
-3. **Marketplace de plugins** — après un audit de conception dédié (format Phase 4)
+3. ⏸️ **Marketplace de plugins** — en pause, en attente d'un besoin réel identifié (pas un audit de conception en cours)
 4. **Extension VSCode** — après avoir tranché wrapper léger vs réimplémentation
 5. **SaaS optionnel** — après avoir répondu à "pourquoi", pas avant
