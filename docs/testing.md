@@ -137,6 +137,15 @@ done
 - **Zéro faux positif majeur** : validé sur les 20 repos Phase 1 après correctifs (extension `.pem`/`.key` confondue avec certificat, regex de clé privée matchant un placeholder de doc, clé AWS d'exemple officielle et fixture Google dans du code vendoré). Ce qui reste est une classe connue et documentée (clés de test dans `testdata/`/`fixtures/`) — voir `docs/decisions/0001-test-fixture-context.md` pour pourquoi ce n'est pas supprimé, seulement annoté.
 - **Budget de temps : per-analyzer, pas global.** `DefaultBudget` (1.5s) est interne à `githistory.Scan()` — le scanner working-tree (`core.Scanner`) n'a aucun budget propre, chaque analyzer enregistré (`secrets`, `docker`) tourne sans limite de temps individuelle. Le garde-fou aujourd'hui est indirect : chaque analyzer reste, par construction, un parsing léger (regex + prefilter littéral, pas de parsing profond), validé empiriquement à chaque nouvel ajout plutôt que supposé. Si un futur analyzer s'avérait intrinsèquement plus coûteux par fichier, il faudrait alors introduire un budget explicite au niveau du `Scanner` — pas fait aujourd'hui car aucun analyzer ne l'a justifié jusqu'ici.
 
+## JSON output : validité + isolation stdout/stderr
+
+`--format json` se valide sur trois points, tous vérifiés avec de vraies commandes plutôt que par lecture de code :
+1. Le JSON produit est syntaxiquement valide (`python3 -m json.tool` en pipe).
+2. `findings: []` sur un repo propre, jamais `null` — un consommateur ne doit pas avoir à gérer les deux cas.
+3. Les diagnostics (`.gitignore`, dépendances, git-history, plugins) restent sur stderr, jamais mêlés au JSON de stdout — vérifié en séparant explicitement les deux flux (`2>/dev/null` vs `2>&1 1>/dev/null`), pas supposé.
+
+Fixture de référence pour couvrir tous les champs simultanément : un mini-repo avec une clé de test ajoutée puis supprimée dans `testdata/` — produit un finding avec `commit_hash` réel (git-history) *et* `context` réel (chemin test/fixture) en même temps, pour confirmer que chaque champ traverse la sérialisation correctement.
+
 ## Où sont les chiffres
 
 `docs/benchmarks.md` — table append-only, un run par phase/PR. Ce fichier-ci dit *quoi* tester et *pourquoi* ; benchmarks.md dit *ce qui a été mesuré, quand*.
