@@ -46,11 +46,11 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 **Objectif** : installer `repoaudit` sans cloner le repo ni avoir Go préinstallé manuellement — Homebrew gère la dépendance de build lui-même. Fonctionne sur Linux et macOS (Homebrew, pas seulement macOS).
 
-**Scope** : repo séparé [xchebila/homebrew-repoaudit](https://github.com/xchebila/homebrew-repoaudit) (convention Homebrew), un seul fichier `Formula/repoaudit.rb`. La formula pointe vers le tarball du tag `v1.0.0` déjà publié, build avec `go build` (`depends_on "go" => :build`) — pas de binaires précompilés, pas de GoReleaser, même raisonnement que pour le GitHub Action (ADR 0011) : pas de besoin prouvé pour cette infra maintenant.
+**Scope** : repo séparé [xchebila/homebrew-repoaudit](https://github.com/xchebila/homebrew-repoaudit) (convention Homebrew), un seul fichier `Formula/repoaudit.rb`. La formula pointe vers un tarball de tag publié, build avec `go build` (`depends_on "go" => :build`) — pas de binaires précompilés, pas de GoReleaser, même raisonnement que pour le GitHub Action (ADR 0011) : pas de besoin prouvé pour cette infra maintenant.
 
 **Prérequis découvert avant de coder** : `--version` n'existait pas sur le binaire (vérifié empiriquement : `unknown flag: --version`) — ajouté dans ce même travail plutôt qu'après coup (ADR 0013).
 
-**Écart découvert en cours de route** : le tag `v1.0.0` précède l'ajout de `--version` — la formula ne peut donc pas s'en servir comme test. Le `test do` utilise `repoaudit scan --help` à la place (le repli déjà envisagé), pas de nouveau tag coupé juste pour ça. À corriger quand un tag postérieur à ADR 0013 existera.
+**Écart découvert en cours de route, puis corrigé** : la formula pointait d'abord vers `v1.0.0`, qui précède `--version` — `--version` restait donc vide de sens pour quiconque installait RepoAudit via `go install` ou la formula, pas seulement pour le test de la formula elle-même. Corrigé en coupant `v1.0.1` immédiatement après le merge de cette PR, en repointant la formula dessus (`sha256` recalculé, testée en local à nouveau), et en mettant à jour le README (`go install ...@v1.0.1`). Le `test do` de la formula vérifie maintenant réellement `repoaudit --version`, plus le repli `scan --help`.
 
 **Validé, pas juste écrit** : `brew tap` + `brew install --build-from-source` + `brew test` exécutés réellement en local avant de pousser la formula — les trois verts. Commande d'installation documentée dans le README principal, à côté de `go install` (qui n'existait pas non plus comme instruction directe utilisateur avant cette même entrée — ajouté au passage).
 
