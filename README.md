@@ -20,7 +20,7 @@ Builds from source (`depends_on "go" => :build`) — no precompiled binaries, no
 **`go install`**, if you already have Go 1.24+:
 
 ```bash
-go install github.com/xchebila/repoaudit@v1.0.0   # or @latest, or a commit SHA
+go install github.com/xchebila/repoaudit@v1.0.1   # or @latest, or a commit SHA
 ```
 
 **From source**:
