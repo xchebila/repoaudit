@@ -197,11 +197,7 @@ plugins:
 
 ## 🌍 Vision long terme
 
-- GitHub Action officiel : `uses: repoaudit/action@v1`
-- Extension VSCode
-- Marketplace de plugins
-- Intégration CI multi-plateforme (GitLab, Jenkins)
-- SaaS optionnel, non obligatoire
+Voir [docs/roadmap-long-term.md](docs/roadmap-long-term.md) pour les directions post-v1.0.
 
 ## 🧠 Positionnement mental
 
