@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RepoAudit report — /repo</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --gridline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --status-good: #0ca30c;
+    --status-warning: #fab219;
+    --status-serious: #ec835a;
+    --status-critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --gridline: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --status-good: #0ca30c;
+      --status-warning: #fab219;
+      --status-serious: #ec835a;
+      --status-critical: #d03b3b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; }
+  header { margin-bottom: 32px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .meta { color: var(--text-secondary); font-size: 13px; }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .hero { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .hero-value { font-size: 56px; font-weight: 600; line-height: 1; }
+  .hero-grade {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
+    padding: 4px 10px; border-radius: 6px; background: var(--gridline);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot--good { background: var(--status-good); }
+  .dot--warning { background: var(--status-warning); }
+  .dot--serious { background: var(--status-serious); }
+  .dot--critical { background: var(--status-critical); }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin: 0 0 16px; }
+  .meter-row { display: grid; grid-template-columns: 120px 1fr 60px; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .meter-label { font-size: 13px; color: var(--text-primary); text-transform: capitalize; }
+  .meter-track { height: 10px; background: var(--gridline); border-radius: 5px; overflow: hidden; }
+  .meter-fill { height: 100%; border-radius: 5px; }
+  .meter-fill--good { background: var(--status-good); }
+  .meter-fill--warning { background: var(--status-warning); }
+  .meter-fill--serious { background: var(--status-serious); }
+  .meter-fill--critical { background: var(--status-critical); }
+  .meter-value { font-size: 13px; color: var(--text-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+  .finding { padding: 16px 0; border-top: 1px solid var(--gridline); }
+  .finding:first-child { border-top: none; padding-top: 0; }
+  .finding-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .badge--good { color: var(--status-good); }
+  .badge--warning { color: #a97300; }
+  .badge--serious { color: #b3441c; }
+  .badge--critical { color: var(--status-critical); }
+  .finding-title { font-size: 15px; font-weight: 600; }
+  .finding-loc { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .finding-message { font-size: 14px; color: var(--text-secondary); margin: 4px 0; }
+  .finding-fix { font-size: 13px; color: var(--text-secondary); }
+  .finding-fix strong { color: var(--text-primary); }
+  .finding-context { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-style: italic; }
+  .empty { color: var(--text-secondary); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>RepoAudit report</h1>
+    <div class="meta">/repo — generated 2000-01-01 00:00</div>
+  </header>
+
+  <div class="card hero">
+    <div class="hero-value">40<span style="font-size:24px;color:var(--text-secondary)">/100</span></div>
+    <div class="hero-grade"><span class="dot dot--critical"></span>Grade F</div>
+  </div>
+
+  
+  <div class="card">
+    <h2>By category</h2>
+    
+    <div class="meter-row">
+      <div class="meter-label">dependencies</div>
+      <div class="meter-track"><div class="meter-fill meter-fill--good" style="width:97%"></div></div>
+      <div class="meter-value">97/100</div>
+    </div>
+    
+    <div class="meter-row">
+      <div class="meter-label">docker</div>
+      <div class="meter-track"><div class="meter-fill meter-fill--good" style="width:90%"></div></div>
+      <div class="meter-value">90/100</div>
+    </div>
+    
+    <div class="meter-row">
+      <div class="meter-label">git-history</div>
+      <div class="meter-track"><div class="meter-fill meter-fill--critical" style="width:40%"></div></div>
+      <div class="meter-value">40/100</div>
+    </div>
+    
+    <div class="meter-row">
+      <div class="meter-label">secrets</div>
+      <div class="meter-track"><div class="meter-fill meter-fill--critical" style="width:40%"></div></div>
+      <div class="meter-value">40/100</div>
+    </div>
+    
+  </div>
+  
+
+  <div class="card">
+    <h2>Findings (4)</h2>
+    
+      
+      <div class="finding">
+        <div class="finding-head">
+          <span class="badge badge--critical">❌ CRITICAL</span>
+          <span class="finding-title">AWS Access Key ID exposed</span>
+          <span class="finding-loc">config.py:1</span>
+        </div>
+        <div class="finding-message">An AWS access key ID was found hardcoded in this file.</div>
+        <div class="finding-fix"><strong>Fix:</strong> Revoke this key in the AWS IAM console.</div>
+        
+      </div>
+      
+      <div class="finding">
+        <div class="finding-head">
+          <span class="badge badge--critical">❌ CRITICAL</span>
+          <span class="finding-title">GitHub token exposed</span>
+          <span class="finding-loc">deploy.sh:12 · commit a83f1c2</span>
+        </div>
+        <div class="finding-message">A GitHub token was found in this commit&#39;s history.</div>
+        <div class="finding-fix"><strong>Fix:</strong> Revoke the token at github.com/settings/tokens.</div>
+        
+      </div>
+      
+      <div class="finding">
+        <div class="finding-head">
+          <span class="badge badge--warning">⚠️ MEDIUM</span>
+          <span class="finding-title">No non-root USER set</span>
+          <span class="finding-loc">Dockerfile:1</span>
+        </div>
+        <div class="finding-message">This Dockerfile never switches away from the default root user.</div>
+        <div class="finding-fix"><strong>Fix:</strong> Add a USER instruction before the final CMD/ENTRYPOINT.</div>
+        
+      </div>
+      
+      <div class="finding">
+        <div class="finding-head">
+          <span class="badge badge--good">⚠️ LOW</span>
+          <span class="finding-title">GO-2026-1: known vulnerability in example.com/pkg@v1.0.0</span>
+          <span class="finding-loc">go.sum</span>
+        </div>
+        <div class="finding-message">Infinite loop on invalid input.</div>
+        <div class="finding-fix"><strong>Fix:</strong> Upgrade example.com/pkg past the vulnerable range.</div>
+        <div class="finding-context">no severity information available from OSV.dev for this vulnerability — defaulted to Medium</div>
+      </div>
+      
+    
+  </div>
+</div>
+</body>
+</html>

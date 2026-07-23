@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "score": {
+    "value": 40,
+    "grade": "F"
+  },
+  "findings": [
+    {
+      "id": "secrets.aws_access_key",
+      "severity": "CRITICAL",
+      "title": "AWS Access Key ID exposed",
+      "message": "An AWS access key ID was found hardcoded in this file.",
+      "fix": "Revoke this key in the AWS IAM console.",
+      "file": "config.py",
+      "line": 1,
+      "commit_hash": "",
+      "category": "secrets",
+      "context": ""
+    },
+    {
+      "id": "secrets.github_token",
+      "severity": "CRITICAL",
+      "title": "GitHub token exposed",
+      "message": "A GitHub token was found in this commit's history.",
+      "fix": "Revoke the token at github.com/settings/tokens.",
+      "file": "deploy.sh",
+      "line": 12,
+      "commit_hash": "a83f1c2",
+      "category": "git-history",
+      "context": ""
+    },
+    {
+      "id": "docker.no_nonroot_user",
+      "severity": "MEDIUM",
+      "title": "No non-root USER set",
+      "message": "This Dockerfile never switches away from the default root user.",
+      "fix": "Add a USER instruction before the final CMD/ENTRYPOINT.",
+      "file": "Dockerfile",
+      "line": 1,
+      "commit_hash": "",
+      "category": "docker",
+      "context": ""
+    },
+    {
+      "id": "dependencies.osv_go",
+      "severity": "LOW",
+      "title": "GO-2026-1: known vulnerability in example.com/pkg@v1.0.0",
+      "message": "Infinite loop on invalid input.",
+      "fix": "Upgrade example.com/pkg past the vulnerable range.",
+      "file": "go.sum",
+      "line": 0,
+      "commit_hash": "",
+      "category": "dependencies",
+      "context": "no severity information available from OSV.dev for this vulnerability — defaulted to Medium"
+    }
+  ]
+}

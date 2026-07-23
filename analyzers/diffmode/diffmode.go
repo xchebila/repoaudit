@@ -18,9 +18,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 
-	"github.com/xchebila/repoaudit/analyzers/cicd"
-	"github.com/xchebila/repoaudit/analyzers/docker"
-	"github.com/xchebila/repoaudit/analyzers/secrets"
+	"github.com/xchebila/repoaudit/analyzers"
 	"github.com/xchebila/repoaudit/core"
 )
 
@@ -92,7 +90,7 @@ func resolveTree(repo *git.Repository, ref string) (*object.Tree, error) {
 // reading blobs from git instead of the filesystem so no checkout is
 // needed.
 func scanTree(tree *object.Tree) ([]core.Finding, error) {
-	analyzerList := []core.Analyzer{secrets.New(), docker.New(), cicd.New()}
+	analyzerList := analyzers.BuiltinAnalyzers()
 
 	var findings []core.Finding
 	err := tree.Files().ForEach(func(f *object.File) error {

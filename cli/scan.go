@@ -8,12 +8,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/xchebila/repoaudit/analyzers"
 	"github.com/xchebila/repoaudit/analyzers/cicd"
 	"github.com/xchebila/repoaudit/analyzers/dependencies"
-	"github.com/xchebila/repoaudit/analyzers/docker"
 	"github.com/xchebila/repoaudit/analyzers/githistory"
 	"github.com/xchebila/repoaudit/analyzers/plugin"
-	"github.com/xchebila/repoaudit/analyzers/secrets"
 	"github.com/xchebila/repoaudit/core"
 	"github.com/xchebila/repoaudit/output"
 )
@@ -70,7 +69,7 @@ fails the whole scan.`,
 				return fmt.Errorf("%s is not a directory", path)
 			}
 
-			analyzers := []core.Analyzer{secrets.New(), docker.New(), cicd.New()}
+			analyzerList := analyzers.BuiltinAnalyzers()
 			var loadedPlugins []*plugin.Plugin
 			for _, p := range pluginPaths {
 				loaded, err := plugin.Load(p)
@@ -78,7 +77,7 @@ fails the whole scan.`,
 					fmt.Fprintf(cmd.ErrOrStderr(), "⚠️  %v — skipping this plugin\n", err)
 					continue
 				}
-				analyzers = append(analyzers, loaded)
+				analyzerList = append(analyzerList, loaded)
 				loadedPlugins = append(loadedPlugins, loaded)
 			}
 			closePlugins := func() {
@@ -93,7 +92,7 @@ fails the whole scan.`,
 			// cleanly, instead of relying on process teardown to do it.
 			defer closePlugins()
 
-			scanner := core.NewScanner(path, analyzers...)
+			scanner := core.NewScanner(path, analyzerList...)
 			for _, w := range scanner.Warnings() {
 				fmt.Fprintf(cmd.ErrOrStderr(), "⚠️  gitignore: %s\n", w)
 			}
