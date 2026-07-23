@@ -146,6 +146,16 @@ done
 
 Fixture de référence pour couvrir tous les champs simultanément : un mini-repo avec une clé de test ajoutée puis supprimée dans `testdata/` — produit un finding avec `commit_hash` réel (git-history) *et* `context` réel (chemin test/fixture) en même temps, pour confirmer que chaque champ traverse la sérialisation correctement.
 
+## Dashboard HTML : premier test Go automatisé du projet, plus une vérification structurelle du rendu
+
+`core/scoring_test.go` — premier fichier `_test.go` de ce projet, écrit spécifiquement pour un invariant que la vérification CLI habituelle ne couvre pas bien : la garantie qu'aucun finding n'est compté deux fois ni oublié quand `ComputeCategoryBreakdown` partitionne par catégorie. Deux tests :
+1. `TestComputeCategoryBreakdown_PartitionsWithoutDuplicationOrLoss` — utilise `ComputeCategoryScore` comme oracle : chaque score de catégorie dans le breakdown doit être identique à celui obtenu en filtrant manuellement les findings de cette catégorie.
+2. `TestComputeCategoryBreakdown_TotalIsNotAnAggregateOfCategoryScores` — un CRITICAL dans une catégorie, des LOW ailleurs ; le score total doit diverger nettement de la moyenne naïve des catégories (35 contre 78 sur la fixture retenue), preuve que le total n'est jamais dérivé du breakdown.
+
+Le HTML généré lui-même se valide en deux temps, aucun des deux par simple lecture de code :
+- Bien-formé structurellement : tags équilibrés, vérifié avec le parseur HTML de la stdlib Python (`html.parser`) sur une fixture multi-catégories (secrets + docker + cicd).
+- Rendu visuel inspecté via un Artifact publié temporairement — cet environnement n'a pas d'outil de capture d'écran, donc la vérification pixel-perfect (alignement, espacement) reste à la charge de la review humaine ; l'automatisé couvre la structure et la logique couleur/statut, pas la mise en page.
+
 ## Où sont les chiffres
 
 `docs/benchmarks.md` — table append-only, un run par phase/PR. Ce fichier-ci dit *quoi* tester et *pourquoi* ; benchmarks.md dit *ce qui a été mesuré, quand*.

@@ -46,6 +46,14 @@ Exits with code 1 if the security score drops below 70, so it can gate a CI pipe
 
 See [docs/decisions/0009-json-output-schema.md](docs/decisions/0009-json-output-schema.md) for the schema and why it's versioned separately from RepoAudit's internal Go types.
 
+`--format html` renders a self-contained dashboard instead — no external CSS/fonts/JS, works offline, with a score breakdown per category alongside the total:
+
+```bash
+./repoaudit scan . --format html > report.html
+```
+
+See [docs/decisions/0010-html-dashboard.md](docs/decisions/0010-html-dashboard.md) for why the total score is never derived from the category breakdown (a single CRITICAL must still dominate, regardless of which category it's in).
+
 `repoaudit diff` shows only what changed between two git refs — built for a pull request, where "what did this PR introduce or fix" matters more than a static score for the whole repo:
 
 ```bash
@@ -176,6 +184,6 @@ Phase 3 — dependency vulnerability scanning for `go.sum` and `requirements.txt
 
 Phase 4 — plugin system (`--plugin`): external detection rules run as a separate process speaking a small JSON protocol, never as in-process Go code — see [docs/plugin-protocol.md](docs/plugin-protocol.md) for the contract and `docs/decisions/0008-plugin-system-scope.md` for why.
 
-Phase 5 (in progress) — reporting: `--format json` for machine-readable output is done; an HTML dashboard is next.
+Phase 5 — reporting: `--format json` for machine-readable output, and `--format html` for a self-contained dashboard with a per-category score breakdown alongside the total. This closes vision.md's roadmap to v1.0.
 
 See [vision.md](docs/vision.md) for the full roadmap, [docs/decisions/](docs/decisions/) for design rationale, [docs/testing.md](docs/testing.md) for the test corpus and exit criteria, and [docs/benchmarks.md](docs/benchmarks.md) for the timing history behind them.

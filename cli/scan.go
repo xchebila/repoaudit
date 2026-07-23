@@ -49,8 +49,8 @@ fails the whole scan.`,
 			if fullHistory && noHistory {
 				return fmt.Errorf("--full-history and --no-history are mutually exclusive")
 			}
-			if format != "cli" && format != "json" {
-				return fmt.Errorf("--format must be \"cli\" or \"json\", got %q", format)
+			if format != "cli" && format != "json" && format != "html" {
+				return fmt.Errorf("--format must be \"cli\", \"json\", or \"html\", got %q", format)
 			}
 
 			path := "."
@@ -150,11 +150,16 @@ fails the whole scan.`,
 			}
 
 			score := core.ComputeCategoryScore(findings)
-			if format == "json" {
+			switch format {
+			case "json":
 				if err := output.WriteJSONReport(cmd.OutOrStdout(), findings, score); err != nil {
 					return fmt.Errorf("writing JSON report: %w", err)
 				}
-			} else {
+			case "html":
+				if err := output.WriteHTMLReport(cmd.OutOrStdout(), findings, score, path); err != nil {
+					return fmt.Errorf("writing HTML report: %w", err)
+				}
+			default:
 				output.WriteReport(cmd.OutOrStdout(), findings, score)
 			}
 
@@ -170,7 +175,7 @@ fails the whole scan.`,
 	cmd.Flags().BoolVar(&noHistory, "no-history", false, "skip git history scanning, working tree only")
 	cmd.Flags().BoolVar(&checkDeps, "deps", false, "check go.sum/requirements.txt dependencies against known vulnerabilities via OSV.dev — requires network, off by default")
 	cmd.Flags().StringArrayVar(&pluginPaths, "plugin", nil, "path to an external plugin executable (see docs/plugin-protocol.md) — repeatable")
-	cmd.Flags().StringVar(&format, "format", "cli", `output format: "cli" (default, colored terminal output) or "json" (machine-readable, see docs/decisions/0009-json-output-schema.md)`)
+	cmd.Flags().StringVar(&format, "format", "cli", `output format: "cli" (default, colored terminal), "json" (machine-readable, docs/decisions/0009-json-output-schema.md), or "html" (self-contained dashboard, docs/decisions/0010-html-dashboard.md)`)
 
 	return cmd
 }

@@ -1,5 +1,7 @@
 package core
 
+import "sort"
+
 // severityImpact are fixed points-per-finding within the ranges defined in
 // vision.md's scoring principle. Repeated findings of the same severity are
 // weighted with diminishing returns (each extra one counts half as much as
@@ -45,6 +47,42 @@ func ComputeCategoryScore(findings []Finding) Score {
 
 	value := int(total)
 	return Score{Value: value, Grade: grade(value)}
+}
+
+// ComputeCategoryBreakdown returns one Score per distinct Category present
+// in findings — the per-category view vision.md's Phase 5 reporting spec
+// shows (Secrets/Docker/CI-CD/... each scored, then a separate total).
+// Each finding belongs to exactly one bucket, matching its own Category
+// field exactly: partitioned first, then ComputeCategoryScore is applied
+// to each bucket independently, so a finding can never be counted toward
+// two categories or dropped from all of them. Sorted by category name for
+// stable, deterministic output across runs.
+//
+// The total score (ComputeCategoryScore called separately on the full,
+// unpartitioned findings list) is NOT derived from these per-category
+// values — it is not their sum or average. Doing that would let a
+// CRITICAL in one category get diluted by clean categories elsewhere,
+// exactly what vision.md's scoring principle forbids: a critical must
+// dominate the total regardless of which category it came from.
+func ComputeCategoryBreakdown(findings []Finding) []Score {
+	byCategory := map[string][]Finding{}
+	for _, f := range findings {
+		byCategory[f.Category] = append(byCategory[f.Category], f)
+	}
+
+	categories := make([]string, 0, len(byCategory))
+	for cat := range byCategory {
+		categories = append(categories, cat)
+	}
+	sort.Strings(categories)
+
+	scores := make([]Score, 0, len(categories))
+	for _, cat := range categories {
+		s := ComputeCategoryScore(byCategory[cat])
+		s.Category = cat
+		scores = append(scores, s)
+	}
+	return scores
 }
 
 func grade(value int) string {
