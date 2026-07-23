@@ -8,6 +8,8 @@ The [GitHub Action](../README.md#github-action) (`action.yml`) is the only integ
 
 ## GitLab CI
 
+> ⚠️ **Not validated against a real GitLab instance.** Reviewed and syntax-checked, not run — see the validation gap note above.
+
 ```yaml
 repoaudit:
   image: golang:1.25
@@ -45,6 +47,8 @@ Notes:
 - No `--deps`/`--plugin` equivalent on the merge-request branch of this snippet, for the same reason `diff` doesn't support them on the CLI itself (see README) — only the push/default-branch branch passes `--format json` and could add `--deps` there.
 
 ## Jenkins (declarative Jenkinsfile)
+
+> ⚠️ **Not validated against a real Jenkins instance.** Reviewed and researched against Jenkins/plugin docs, not run — see the validation gap note above.
 
 Requires a Multibranch Pipeline job with the appropriate SCM source plugin configured (GitHub Branch Source, GitLab Branch Source, Bitbucket Branch Source, ...) — that plugin is what populates `CHANGE_ID`/`CHANGE_TARGET`. Jenkins has no built-in concept of a pull/merge request outside of that plugin.
 
