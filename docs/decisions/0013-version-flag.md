@@ -10,7 +10,7 @@ Prérequis découvert en préparant la distribution Homebrew (`docs/roadmap-long
 
 ## Décision : `cobra.Command.Version`, pas une sous-commande maison
 
-`cli.NewRootCmd` prend maintenant un paramètre `version string` et le pose sur `root.Version` — Cobra enregistre `--version` automatiquement dès que ce champ est non vide, avec un format de sortie standard (`repoaudit version <X>`). Pas de sous-commande `version` ni de flag custom à maintenir.
+`cli.NewRootCmd` prend maintenant un paramètre `version string` et le pose sur `root.Version` — Cobra enregistre `--version` automatiquement dès que ce champ est non vide, avec un format de sortie standard (`reposcan version <X>`). Pas de sous-commande `version` ni de flag custom à maintenir.
 
 ## Décision : injection par ldflags, pas `runtime/debug.ReadBuildInfo()`
 
@@ -24,5 +24,5 @@ Le projet a maintenant trois chemins de build distincts qui doivent tous rapport
 
 ## Conséquences
 
-- Vérifié empiriquement, pas seulement lu dans la doc Cobra : `go build -o repoaudit . && ./repoaudit --version` → `repoaudit version dev` ; avec `-ldflags "-X main.version=v1.0.0"` → `repoaudit version v1.0.0` ; `go install -ldflags "..." .` confirmé aussi (syntaxe valide, testée en local avec un `GOBIN` de scratch).
+- Vérifié empiriquement, pas seulement lu dans la doc Cobra : `go build -o reposcan . && ./reposcan --version` → `reposcan version dev` ; avec `-ldflags "-X main.version=v1.0.0"` → `reposcan version v1.0.0` ; `go install -ldflags "..." .` confirmé aussi (syntaxe valide, testée en local avec un `GOBIN` de scratch).
 - Les snippets GitLab/Jenkins (`docs/ci-integrations.md`) n'injectent pas ces ldflags — laissés tels quels pour l'instant (déjà documentés comme non validés en conditions réelles, ADR 0012) ; `--version` y rapporterait "dev". À corriger si un besoin réel apparaît pour ces deux plateformes, même logique que pour le reste de cette roadmap.

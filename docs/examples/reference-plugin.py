@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reference implementation of the RepoAudit plugin protocol (v1).
+"""Reference implementation of the RepoScan plugin protocol (v1).
 
 Deliberately written in Python, not Go: docs/plugin-protocol.md's whole
 point is that the protocol isn't Go-specific, and the only way to be
@@ -11,7 +11,7 @@ exact string, not a real credential pattern, is what the reference plugin
 and its tests use).
 
 Usage: reference-plugin.py [--misbehave=timeout|crash|fatal|error]
-The --misbehave modes exist only to exercise RepoAudit's failure-handling
+The --misbehave modes exist only to exercise RepoScan's failure-handling
 paths in tests; a real plugin has no reason to imitate them.
 """
 import base64
@@ -55,7 +55,7 @@ def main():
             if MISBEHAVE == "crash":
                 sys.exit(1)
             if MISBEHAVE == "timeout":
-                time.sleep(30)  # longer than RepoAudit's 5s per-file timeout
+                time.sleep(30)  # longer than RepoScan's 5s per-file timeout
             if MISBEHAVE == "error":
                 send({"type": "error", "fatal": False, "path": path, "message": "reference-plugin: simulated non-fatal error"})
                 continue

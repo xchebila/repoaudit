@@ -8,7 +8,7 @@ Accepté (2026-07-23). Précédé d'un audit explicite de l'interface `core.Anal
 
 Vérifié dans le code existant avant de décider quoi que ce soit : `secrets`, `docker`, `cicd.Run()` n'accèdent au filesystem que via `core.FileContext.Content`, déjà lu par `core.Scanner` — zéro I/O directe dans le chemin `Analyzer`. Mais ce n'est vrai que parce que ce code est écrit et revu avec discipline, pas parce que l'interface `Run(FileContext) []Finding` l'impose : rien, dans le langage, n'empêche du code compilé dans le même binaire d'importer `os`/`net`/`os/exec` directement et d'ignorer complètement le paramètre reçu. Un contrat Go est une convention de compilation, pas un sandbox d'exécution — cette distinction est le point de départ de toutes les décisions qui suivent.
 
-Également vérifié : aucun `recover()` n'existe nulle part dans `core`/`cli`, et `core.Scanner.Scan()` appelle `a.Run(ctx)` de façon synchrone, sans timeout. Un panic ou une boucle infinie dans *n'importe quel* analyzer plante ou bloque tout `repoaudit` aujourd'hui — un fait déjà vrai avant cette phase, mais dont les conséquences changent de nature dès qu'un analyzer peut être du code tiers non audité plutôt que du code de ce repo.
+Également vérifié : aucun `recover()` n'existe nulle part dans `core`/`cli`, et `core.Scanner.Scan()` appelle `a.Run(ctx)` de façon synchrone, sans timeout. Un panic ou une boucle infinie dans *n'importe quel* analyzer plante ou bloque tout `reposcan` aujourd'hui — un fait déjà vrai avant cette phase, mais dont les conséquences changent de nature dès qu'un analyzer peut être du code tiers non audité plutôt que du code de ce repo.
 
 ## Décision : subprocess NDJSON, jamais de plugin Go natif
 
@@ -26,7 +26,7 @@ Portée volontairement minimale pour cette v1 : lecture d'octets uniquement, auc
 
 ## Décision : schéma de wire versionné, séparé de `core.Finding`
 
-`protocol_version` négocié au handshake, distinct du struct Go interne : un plugin externe recompile indépendamment de RepoAudit, donc rien ne garantit qu'il tourne avec la même version de `core.Finding` qu'un analyzer interne (qui, lui, se recompile avec le reste du repo à chaque changement). Champs inconnus ignorés, pas rejetés — le schéma est fait pour évoluer sans casser les plugins déjà écrits.
+`protocol_version` négocié au handshake, distinct du struct Go interne : un plugin externe recompile indépendamment de RepoScan, donc rien ne garantit qu'il tourne avec la même version de `core.Finding` qu'un analyzer interne (qui, lui, se recompile avec le reste du repo à chaque changement). Champs inconnus ignorés, pas rejetés — le schéma est fait pour évoluer sans casser les plugins déjà écrits.
 
 Namespace des `id` de finding forcé côté hôte (préfixe `<plugin_name>.` ajouté automatiquement si absent) — pas une confiance aveugle dans la discipline d'un auteur tiers, un filet de sécurité anti-collision.
 
@@ -36,7 +36,7 @@ Trois modes de défaillance, traités de façon identique : erreur fatale explic
 
 Pas de redémarrage après un abandon : un plugin qui crashe ou timeout sur un fichier a probablement un vrai problème qui se reproduira, retenter ajoute de la latence sans bénéfice attendu. Cohérent avec le pattern déjà établi (budget de temps du git-history analyzer, dégradation réseau du Dependency Scanner) : ne jamais laisser un contrôle défaillant faire tomber tout le scan.
 
-**Conséquence explicite sur "zéro-config, ça marche toujours"** : cette garantie reste vraie pour le scan de base (secrets/docker/cicd, jamais affecté par un plugin tiers cassé), mais devient conditionnelle *pour les findings du plugin lui-même* dès qu'un utilisateur installe du code tiers de mauvaise qualité. RepoAudit ne peut garantir la fiabilité que de son propre code, pas de celui qu'un utilisateur choisit d'ajouter — c'est une limite assumée, pas un défaut à corriger.
+**Conséquence explicite sur "zéro-config, ça marche toujours"** : cette garantie reste vraie pour le scan de base (secrets/docker/cicd, jamais affecté par un plugin tiers cassé), mais devient conditionnelle *pour les findings du plugin lui-même* dès qu'un utilisateur installe du code tiers de mauvaise qualité. RepoScan ne peut garantir la fiabilité que de son propre code, pas de celui qu'un utilisateur choisit d'ajouter — c'est une limite assumée, pas un défaut à corriger.
 
 ## Ce que le sandboxing ne résout pas
 
@@ -46,7 +46,7 @@ Même parfaitement isolé (process séparé, octets seuls), un plugin peut *ment
 
 Le symlink externe non géré dans `core.Scanner` (repéré pendant l'audit initial : un fichier du repo scanné qui serait un symlink vers `/etc/passwd` verrait son contenu réel lu et associé à un `Path` d'apparence innocente) — existant depuis la Phase 1, pas spécifique aux plugins, traité comme un sujet séparé sur demande explicite de l'utilisateur.
 
-Découverte/installation de plugins (`repoaudit plugins list`/`install` du vision.md) — cette PR n'ajoute qu'un flag `--plugin <chemin-executable>`, répétable, pointant vers un binaire local déjà présent sur la machine. Un registre ou un mécanisme d'installation est une question séparée, non traitée ici.
+Découverte/installation de plugins (`reposcan plugins list`/`install` du vision.md) — cette PR n'ajoute qu'un flag `--plugin <chemin-executable>`, répétable, pointant vers un binaire local déjà présent sur la machine. Un registre ou un mécanisme d'installation est une question séparée, non traitée ici.
 
 ## Conséquences
 

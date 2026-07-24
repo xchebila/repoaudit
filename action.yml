@@ -1,8 +1,8 @@
-name: 'RepoAudit'
+name: 'RepoScan'
 description: >
   Security sanity check for git repos: secrets, Docker, CI/CD, and
-  dependency vulnerabilities. Runs `repoaudit diff` on a pull request
-  (reports only what the PR introduces or fixes), or `repoaudit scan`
+  dependency vulnerabilities. Runs `reposcan diff` on a pull request
+  (reports only what the PR introduces or fixes), or `reposcan scan`
   otherwise (reports the repo's absolute score).
 author: 'xchebila'
 branding:
@@ -12,22 +12,22 @@ branding:
 inputs:
   fail-on-new:
     description: >
-      Whether this action fails (non-zero) when repoaudit reports a
+      Whether this action fails (non-zero) when reposcan reports a
       problem: on a pull_request event, any NEW finding from
-      `repoaudit diff`; otherwise, a security score below 70 from
-      `repoaudit scan`. Set to false to report without failing the build.
+      `reposcan diff`; otherwise, a security score below 70 from
+      `reposcan scan`. Set to false to report without failing the build.
     required: false
     default: 'true'
   deps:
     description: >
-      Pass --deps to `repoaudit scan` on non-PR runs, checking pinned
+      Pass --deps to `reposcan scan` on non-PR runs, checking pinned
       dependencies against OSV.dev (requires network). Ignored on
-      pull_request runs, which always use `repoaudit diff` (no --deps
+      pull_request runs, which always use `reposcan diff` (no --deps
       equivalent — see README).
     required: false
     default: 'false'
   go-version:
-    description: 'Go toolchain version used to `go install` repoaudit.'
+    description: 'Go toolchain version used to `go install` reposcan.'
     required: false
     default: '1.25'
 
@@ -36,7 +36,7 @@ runs:
   steps:
     - name: Checkout full history
       # fetch-depth: 0 so both the PR base and head commits are always
-      # resolvable for `repoaudit diff`, regardless of the calling
+      # resolvable for `reposcan diff`, regardless of the calling
       # workflow's own checkout settings.
       uses: actions/checkout@v4
       with:
@@ -47,7 +47,7 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
 
-    - name: Install repoaudit
+    - name: Install reposcan
       shell: bash
       env:
         # Bypass the module proxy so a just-pushed commit (e.g. this
@@ -56,7 +56,7 @@ runs:
         GOPROXY: direct
         # sum.golang.org can 500 on a pseudo-version for a commit that
         # was only just pushed. Skipping it is safe here: this installs
-        # repoaudit itself from its own known repo, not a third-party
+        # reposcan itself from its own known repo, not a third-party
         # dependency -- there's no supply chain to verify against.
         GOSUMDB: 'off'
       run: |
@@ -72,29 +72,29 @@ runs:
             ref="${{ github.sha }}"
           fi
         fi
-        go install -ldflags "-X main.version=$ref" "github.com/xchebila/repoaudit@$ref"
+        go install -ldflags "-X main.version=$ref" "github.com/xchebila/reposcan@$ref"
 
-    - name: repoaudit diff (pull request)
+    - name: reposcan diff (pull request)
       if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
       shell: bash
       continue-on-error: ${{ inputs.fail-on-new == 'false' }}
-      run: repoaudit diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+      run: reposcan diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
 
-    - name: repoaudit scan (push / other events)
+    - name: reposcan scan (push / other events)
       if: github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
       shell: bash
       continue-on-error: ${{ inputs.fail-on-new == 'false' }}
       run: |
         if [ "${{ inputs.deps }}" = "true" ]; then
-          repoaudit scan . --deps --format json > repoaudit-report.json
+          reposcan scan . --deps --format json > reposcan-report.json
         else
-          repoaudit scan . --format json > repoaudit-report.json
+          reposcan scan . --format json > reposcan-report.json
         fi
-        cat repoaudit-report.json
+        cat reposcan-report.json
 
     - name: Upload report artifact
       if: ${{ !cancelled() && github.event_name != 'pull_request' && github.event_name != 'pull_request_target' }}
       uses: actions/upload-artifact@v4
       with:
-        name: repoaudit-report
-        path: repoaudit-report.json
+        name: reposcan-report
+        path: reposcan-report.json

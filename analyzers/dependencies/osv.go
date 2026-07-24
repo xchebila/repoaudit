@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 // osvBatchURL and osvVulnURL are var, not const, so tests can point them at
@@ -351,7 +351,7 @@ func buildFinding(dep Dependency, id string, detail *osvVulnDetail) core.Finding
 	}
 }
 
-// mapSeverity buckets an OSV record into RepoAudit's four-level Severity.
+// mapSeverity buckets an OSV record into RepoScan's four-level Severity.
 // database_specific.severity (a simple CRITICAL/HIGH/MODERATE/LOW string,
 // common on GHSA-sourced records) is authoritative when present — no
 // Context needed. Otherwise, a CVSS vector is used to *estimate* severity

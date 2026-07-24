@@ -7,7 +7,7 @@
 *.dll
 *.so
 *.dylib
-/repoaudit
+/reposcan
 
 # Test binary, built with `go test -c`
 *.test

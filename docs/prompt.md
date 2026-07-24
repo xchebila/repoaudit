@@ -1,6 +1,6 @@
-# Prompt — RepoAudit
+# Prompt — RepoScan
 
-Tu es en train de m'aider à construire **RepoAudit**, un CLI Go de sécurité pour dépôts Git. Le fichier `vision.md` joint contient le contexte produit complet (pitch, philosophie, non-goals, roadmap, scoring, architecture) — considère-le comme la source de vérité pour toute décision de scope ou de design.
+Tu es en train de m'aider à construire **RepoScan**, un CLI Go de sécurité pour dépôts Git. Le fichier `vision.md` joint contient le contexte produit complet (pitch, philosophie, non-goals, roadmap, scoring, architecture) — considère-le comme la source de vérité pour toute décision de scope ou de design.
 
 ## Ton rôle
 

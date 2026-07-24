@@ -8,7 +8,7 @@ Accepté (2026-07-02).
 
 En validant le critère de sortie du MVP (scan < 5s, zéro faux positif majeur sur ~20 repos publics), la majorité des findings `secrets.private_key_block` restants après correction des vrais faux positifs (cf. corpus de test) pointaient vers des clés PEM complètes et valides commitées dans des dossiers `testdata/`, `tests/`, `fixtures/` — des certificats de test générés pour des serveurs TLS locaux, pas des secrets de production.
 
-Techniquement, ce ne sont pas des faux positifs : le contenu détecté est bien une clé privée réelle. La question posée était de UX/scoring : faut-il désamorcer l'alerte quand le chemin ressemble à un dossier de test, pour éviter que RepoAudit crie systématiquement au loup sur des repos matures qui suivent cette convention ?
+Techniquement, ce ne sont pas des faux positifs : le contenu détecté est bien une clé privée réelle. La question posée était de UX/scoring : faut-il désamorcer l'alerte quand le chemin ressemble à un dossier de test, pour éviter que RepoScan crie systématiquement au loup sur des repos matures qui suivent cette convention ?
 
 ## Décision
 
@@ -19,6 +19,6 @@ Techniquement, ce ne sont pas des faux positifs : le contenu détecté est bien 
 ## Conséquences
 
 - Le scoring reste fidèle au principe du vision.md : un secret exposé domine le score, quel que soit son emplacement.
-- L'utilisateur garde un signal de triage rapide en CLI sans que RepoAudit se prononce à sa place sur la légitimité du finding.
+- L'utilisateur garde un signal de triage rapide en CLI sans que RepoScan se prononce à sa place sur la légitimité du finding.
 - Toute future analyzer (docker, ci, git-history) peut réutiliser `core.LooksLikeTestPath()` pour la même annotation contextuelle, sans dupliquer la logique de détection de chemin.
 - Ce choix est délibérément conservateur : il accepte plus de bruit visuel (les CRITICAL de fixtures de test restent des CRITICAL) en échange de zéro risque de masquer une vraie fuite. Ne pas revenir dessus sans re-discuter explicitement le compromis.

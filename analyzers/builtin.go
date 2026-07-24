@@ -13,10 +13,10 @@
 package analyzers
 
 import (
-	"github.com/xchebila/repoaudit/analyzers/cicd"
-	"github.com/xchebila/repoaudit/analyzers/docker"
-	"github.com/xchebila/repoaudit/analyzers/secrets"
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/analyzers/cicd"
+	"github.com/xchebila/reposcan/analyzers/docker"
+	"github.com/xchebila/reposcan/analyzers/secrets"
+	"github.com/xchebila/reposcan/core"
 )
 
 // BuiltinAnalyzers returns a fresh slice of the built-in analyzers, in the

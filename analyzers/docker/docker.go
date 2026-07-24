@@ -1,4 +1,4 @@
-// Package docker implements RepoAudit's Phase 2 Dockerfile detection rules:
+// Package docker implements RepoScan's Phase 2 Dockerfile detection rules:
 // running as root, floating tags, and ADD used where COPY would do.
 // Secrets hardcoded in ENV/ARG instructions need no rule here — a
 // Dockerfile is just text, so analyzers/secrets already scans it via the
@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 type Analyzer struct{}

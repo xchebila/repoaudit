@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 const (
@@ -30,7 +30,7 @@ func icon(sev core.Severity) (string, string) {
 }
 
 // WriteReport prints findings grouped by severity (worst first), then the
-// overall score line. This is the only output surface for `repoaudit scan`
+// overall score line. This is the only output surface for `reposcan scan`
 // today — JSON/HTML come in Phase 5, and the per-category score breakdown
 // vision.md's roadmap shows (Secrets, Git History, Docker...) is explicitly
 // that phase's job too; for now secrets and git-history findings share one

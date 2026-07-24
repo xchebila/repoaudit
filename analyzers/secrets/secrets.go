@@ -1,4 +1,4 @@
-// Package secrets implements RepoAudit's Phase 1 detection rules: hardcoded
+// Package secrets implements RepoScan's Phase 1 detection rules: hardcoded
 // credentials in the working tree (not git history — that's Phase 2).
 package secrets
 
@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 type rule struct {

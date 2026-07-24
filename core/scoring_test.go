@@ -62,7 +62,7 @@ func TestComputeCategoryBreakdown_PartitionsWithoutDuplicationOrLoss(t *testing.
 }
 
 // TestComputeCategoryBreakdown_TotalIsNotAnAggregateOfCategoryScores
-// guards the scoring principle the repoaudit-finding skill and multiple
+// guards the scoring principle the reposcan-finding skill and multiple
 // ADRs (0003, 0005) call non-negotiable: a critical must dominate the
 // total score, never get diluted by averaging against clean categories
 // elsewhere. This is the failure mode a naive dashboard implementation

@@ -1,6 +1,6 @@
 # Documentation
 
-**Pour utiliser RepoAudit, le [README principal](../README.md) suffit** — installation, commandes, exemples de sortie.
+**Pour utiliser RepoScan, le [README principal](../README.md) suffit** — installation, commandes, exemples de sortie.
 
 Ce qui suit documente le *pourquoi* derrière chaque décision d'architecture, au fil de la construction du projet. Utile si tu es curieux d'un choix précis ou si tu contribues au projet — pas nécessaire pour s'en servir.
 

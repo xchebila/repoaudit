@@ -6,7 +6,7 @@ Accepté (2026-07-22). Décision prise avant l'implémentation (Phase 3, séquen
 
 ## Contexte
 
-Le Dependency Scanner (vision.md Phase 3) doit interroger l'API OSV.dev pour détecter des dépendances vulnérables. C'est la première feature de RepoAudit qui a besoin du réseau — tout le reste (secrets, git-history, docker, CI/CD à venir) est purement local.
+Le Dependency Scanner (vision.md Phase 3) doit interroger l'API OSV.dev pour détecter des dépendances vulnérables. C'est la première feature de RepoScan qui a besoin du réseau — tout le reste (secrets, git-history, docker, CI/CD à venir) est purement local.
 
 Le git-history analyzer a déjà un précédent de "dégradation propre" (budget de temps, `Truncated` explicite) plutôt qu'un comportement tout-ou-rien. La question : le même principe de dégradation s'applique-t-il à un appel réseau, au point de le justifier comme comportement par défaut ?
 
@@ -28,5 +28,5 @@ La mécanique technique reste celle envisagée dès le départ, seulement dépla
 ## Conséquences
 
 - Le scan par défaut garde sa promesse "sans setup, quelques secondes, toujours pareil" intacte — aucune régression de fiabilité en ajoutant le Dependency Scanner.
-- Un utilisateur CI qui veut la vérification de dépendances doit l'activer explicitement (`repoaudit scan . --deps`) — c'est un coût de découvrabilité assumé en échange du déterminisme par défaut.
+- Un utilisateur CI qui veut la vérification de dépendances doit l'activer explicitement (`reposcan scan . --deps`) — c'est un coût de découvrabilité assumé en échange du déterminisme par défaut.
 - Précédent posé pour toute future feature réseau (ex. GitHub Advisory DB, futures intégrations SaaS) : opt-in par défaut, jamais silencieusement actif.

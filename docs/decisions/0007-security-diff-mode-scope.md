@@ -6,7 +6,7 @@ Accepté (2026-07-22).
 
 ## Contexte
 
-`repoaudit diff main feature-branch` (vision.md Phase 3) doit montrer ce qu'une branche/PR introduit ou corrige, pas un score statique du repo entier. Deux questions tranchées avec l'utilisateur avant l'implémentation : comment apparier un finding entre les deux refs pour décider NEW/FIXED/inchangé, et sur quoi baser le code de sortie.
+`reposcan diff main feature-branch` (vision.md Phase 3) doit montrer ce qu'une branche/PR introduit ou corrige, pas un score statique du repo entier. Deux questions tranchées avec l'utilisateur avant l'implémentation : comment apparier un finding entre les deux refs pour décider NEW/FIXED/inchangé, et sur quoi baser le code de sortie.
 
 ## Décision : lire les refs via go-git, pas de `git checkout`
 
