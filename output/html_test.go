@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 // timestampPattern matches WriteHTMLReport's "GeneratedAt" stamp

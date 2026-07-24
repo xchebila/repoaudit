@@ -12,7 +12,7 @@ Le Docker Analyzer (Phase 2) doit détecter : absence d'utilisateur non-root / `
 
 **"Secrets dans ENV" ne nécessite aucun code** : `core.Scanner` fait déjà tourner tous les analyzers enregistrés sur chaque fichier, un Dockerfile est un fichier texte comme un autre — `secrets.New()` détecte donc déjà `ENV AWS_KEY=AKIA...` avec `Category: "secrets"`. Vérifié empiriquement (`docs/decisions/0003`, voir tests). Le Docker Analyzer se limite aux 3 vérifications structurelles, `Category: "docker"`.
 
-**Sévérités** : MEDIUM pour l'utilisateur root (aligné sur l'exemple du vision.md, "⚠️ MEDIUM - Docker runs as root"), LOW pour le tag `latest` et pour `ADD` au lieu de `COPY` — aucune de ces trois règles n'est une fuite immédiate, contrairement à un secret exposé (voir la checklist du skill `repoaudit-finding`, point 1 : la sévérité doit refléter un risque réel, pas juste une mauvaise pratique).
+**Sévérités** : MEDIUM pour l'utilisateur root (aligné sur l'exemple du vision.md, "⚠️ MEDIUM - Docker runs as root"), LOW pour le tag `latest` et pour `ADD` au lieu de `COPY` — aucune de ces trois règles n'est une fuite immédiate, contrairement à un secret exposé (voir la checklist du skill `reposcan-finding`, point 1 : la sévérité doit refléter un risque réel, pas juste une mauvaise pratique).
 
 **Garde-fous anti-FP**, validés sur un corpus réel (prometheus) et pas seulement en théorie :
 - Tags : les noms de stage (`FROM x AS builder`, puis `FROM builder`) sont collectés avant l'évaluation, pour ne pas confondre une référence à un stage précédent avec une image non taguée.

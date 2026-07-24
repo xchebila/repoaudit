@@ -5,7 +5,7 @@ import "github.com/spf13/cobra"
 
 func NewRootCmd(version string) *cobra.Command {
 	root := &cobra.Command{
-		Use:     "repoaudit",
+		Use:     "reposcan",
 		Short:   "Security sanity check for Git repositories",
 		Version: version,
 	}

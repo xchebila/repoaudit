@@ -3,7 +3,7 @@
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
 build:
-	go build -ldflags "-X main.version=$(VERSION)" -o repoaudit .
+	go build -ldflags "-X main.version=$(VERSION)" -o reposcan .
 
 test:
 	go test ./...
@@ -15,4 +15,4 @@ check:
 	go test ./...
 
 clean:
-	rm -f repoaudit
+	rm -f reposcan

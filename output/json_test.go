@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 func TestWriteJSONReport_Golden(t *testing.T) {

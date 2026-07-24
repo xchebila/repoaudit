@@ -118,7 +118,7 @@ func (s *Scanner) Scan() ([]Finding, error) {
 }
 
 // IsBinary uses the same heuristic as git: a NUL byte in the first chunk
-// means "not text". Cheap and good enough — RepoAudit doesn't need to be
+// means "not text". Cheap and good enough — RepoScan doesn't need to be
 // exact here, just fast and non-noisy on binary assets.
 func IsBinary(content []byte) bool {
 	n := len(content)

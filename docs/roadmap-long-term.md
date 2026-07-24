@@ -1,4 +1,4 @@
-# 🌍 Roadmap long terme — RepoAudit
+# 🌍 Roadmap long terme — RepoScan
 
 **Arrêt délibéré, pas un simple "à suivre"** : depuis le GitHub Action et les intégrations CI, le projet est considéré stable — v1.0 + GitHub Action + intégrations CI est l'état de référence, tant qu'aucun vrai point de friction ou vraie demande ne se présente. Ça vaut pour n'importe quel item de cette liste (marketplace de plugins, extension VSCode, SaaS) ou une idée qui n'y figure même pas encore. Ce n'est pas une pause temporaire en attendant de dérouler chaque item dans l'ordre "quand on aura le temps" — c'est un choix délibéré de ne pas avancer cette liste par défaut, et de ne la reprendre que sur un signal réel, pas sur l'inertie de la roadmap elle-même. La distribution via Homebrew tap, ajoutée après cet arrêt, est exactement ce genre de signal réel — une demande explicite, pas une reprise de la liste par défaut.
 
@@ -13,14 +13,14 @@ Ce document couvre ce qui vient après le v1.0 (Phases 1-5, voir `vision.md`).
 ### Scope MVP
 
 ```yaml
-- uses: repoaudit/action@v1
+- uses: reposcan/action@v1
   with:
-    fail-on-new: true    # utilise `repoaudit diff` si base-ref/head-ref détectés (PR), sinon `repoaudit scan`
+    fail-on-new: true    # utilise `reposcan diff` si base-ref/head-ref détectés (PR), sinon `reposcan scan`
 ```
 
-- Action composite (pas de runtime custom) : installe le binaire `repoaudit` déjà existant, l'exécute, expose le code de sortie.
-- Sur une pull request : utilise `repoaudit diff <base> <head>` (Phase 3, déjà livré) — le mode conçu précisément pour ce cas d'usage.
-- Hors PR (push sur une branche) : bascule sur `repoaudit scan . --format json`, publié en artifact de build.
+- Action composite (pas de runtime custom) : installe le binaire `reposcan` déjà existant, l'exécute, expose le code de sortie.
+- Sur une pull request : utilise `reposcan diff <base> <head>` (Phase 3, déjà livré) — le mode conçu précisément pour ce cas d'usage.
+- Hors PR (push sur une branche) : bascule sur `reposcan scan . --format json`, publié en artifact de build.
 - Aucune nouvelle feature côté CLI — ce travail est du packaging pur autour de ce qui existe déjà (`diff`, `--format json`).
 
 ### Pourquoi ce n'est pas un audit de conception comme Phase 4
@@ -29,8 +29,8 @@ Contrairement au Plugin System, il n'y a pas de code tiers non fiable à isoler 
 
 ### Critère de sortie — validé
 
-- `fail-on-new: true` fait échouer le check GitHub exactement comme `repoaudit diff` en local (même code de sortie, même sémantique) — vérifié par un vrai run CI, pas seulement en local.
-- Testé sur ce repo lui-même en conditions CI réelles via `.github/workflows/repoaudit-self-check.yml` (les trois chemins : PR/diff, push/scan, `workflow_dispatch`) — deux vrais bugs trouvés et corrigés en cours de route (SHA de merge éphémère, fraîcheur de sum.golang.org). Voir [docs/decisions/0011-github-action.md](decisions/0011-github-action.md).
+- `fail-on-new: true` fait échouer le check GitHub exactement comme `reposcan diff` en local (même code de sortie, même sémantique) — vérifié par un vrai run CI, pas seulement en local.
+- Testé sur ce repo lui-même en conditions CI réelles via `.github/workflows/reposcan-self-check.yml` (les trois chemins : PR/diff, push/scan, `workflow_dispatch`) — deux vrais bugs trouvés et corrigés en cours de route (SHA de merge éphémère, fraîcheur de sum.golang.org). Voir [docs/decisions/0011-github-action.md](decisions/0011-github-action.md).
 
 ---
 
@@ -44,13 +44,13 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 **N'apparaissait dans aucun des deux documents de roadmap avant cette entrée** — ni `vision.md` ni ce fichier. Ajouté explicitement ici avant tout code, pour ne pas perdre la décision comme le corpus de test de la Phase 1 a failli l'être.
 
-**Objectif** : installer `repoaudit` sans cloner le repo ni avoir Go préinstallé manuellement — Homebrew gère la dépendance de build lui-même. Fonctionne sur Linux et macOS (Homebrew, pas seulement macOS).
+**Objectif** : installer `reposcan` sans cloner le repo ni avoir Go préinstallé manuellement — Homebrew gère la dépendance de build lui-même. Fonctionne sur Linux et macOS (Homebrew, pas seulement macOS).
 
-**Scope** : repo séparé [xchebila/homebrew-repoaudit](https://github.com/xchebila/homebrew-repoaudit) (convention Homebrew), un seul fichier `Formula/repoaudit.rb`. La formula pointe vers un tarball de tag publié, build avec `go build` (`depends_on "go" => :build`) — pas de binaires précompilés, pas de GoReleaser, même raisonnement que pour le GitHub Action (ADR 0011) : pas de besoin prouvé pour cette infra maintenant.
+**Scope** : repo séparé [xchebila/homebrew-reposcan](https://github.com/xchebila/homebrew-reposcan) (convention Homebrew), un seul fichier `Formula/reposcan.rb`. La formula pointe vers un tarball de tag publié, build avec `go build` (`depends_on "go" => :build`) — pas de binaires précompilés, pas de GoReleaser, même raisonnement que pour le GitHub Action (ADR 0011) : pas de besoin prouvé pour cette infra maintenant.
 
 **Prérequis découvert avant de coder** : `--version` n'existait pas sur le binaire (vérifié empiriquement : `unknown flag: --version`) — ajouté dans ce même travail plutôt qu'après coup (ADR 0013).
 
-**Écart découvert en cours de route, puis corrigé** : la formula pointait d'abord vers `v1.0.0`, qui précède `--version` — `--version` restait donc vide de sens pour quiconque installait RepoAudit via `go install` ou la formula, pas seulement pour le test de la formula elle-même. Corrigé en coupant `v1.0.1` immédiatement après le merge de cette PR, en repointant la formula dessus (`sha256` recalculé, testée en local à nouveau), et en mettant à jour le README (`go install ...@v1.0.1`). Le `test do` de la formula vérifie maintenant réellement `repoaudit --version`, plus le repli `scan --help`.
+**Écart découvert en cours de route, puis corrigé** : la formula pointait d'abord vers `v1.0.0`, qui précède `--version` — `--version` restait donc vide de sens pour quiconque installait RepoScan via `go install` ou la formula, pas seulement pour le test de la formula elle-même. Corrigé en coupant `v1.0.1` immédiatement après le merge de cette PR, en repointant la formula dessus (`sha256` recalculé, testée en local à nouveau), et en mettant à jour le README (`go install ...@v1.0.1`). Le `test do` de la formula vérifie maintenant réellement `reposcan --version`, plus le repli `scan --help`.
 
 **Validé, pas juste écrit** : `brew tap` + `brew install --build-from-source` + `brew test` exécutés réellement en local avant de pousser la formula — les trois verts. Commande d'installation documentée dans le README principal, à côté de `go install` (qui n'existait pas non plus comme instruction directe utilisateur avant cette même entrée — ajouté au passage).
 
@@ -86,7 +86,7 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 **La vraie question, pas encore posée** : quel problème un SaaS résout-il que CLI + GitHub Action ne résolvent pas déjà ? Le vision.md le qualifie lui-même de "non obligatoire" — ce n'est pas un engagement, c'est une option qui n'a pas encore de justification claire.
 
-**Tension avec la philosophie du projet** : un SaaS introduit un hébergement, potentiellement des comptes utilisateurs, une surface d'attaque et une charge opérationnelle sans rapport avec "CLI local, zéro-config, zéro dépendance" qui est au cœur de RepoAudit depuis le vision.md original. Avant tout cadrage technique, ce point mérite une vraie réponse écrite (dans un ADR ou équivalent) à la question "pourquoi", pas seulement "comment".
+**Tension avec la philosophie du projet** : un SaaS introduit un hébergement, potentiellement des comptes utilisateurs, une surface d'attaque et une charge opérationnelle sans rapport avec "CLI local, zéro-config, zéro dépendance" qui est au cœur de RepoScan depuis le vision.md original. Avant tout cadrage technique, ce point mérite une vraie réponse écrite (dans un ADR ou équivalent) à la question "pourquoi", pas seulement "comment".
 
 ---
 

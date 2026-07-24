@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 // update regenerates every golden file in this package from the current

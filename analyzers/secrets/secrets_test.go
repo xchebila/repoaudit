@@ -3,16 +3,16 @@ package secrets
 import (
 	"testing"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 // These fixture values are split across two (or more) Go string literals
 // joined with "+", instead of one contiguous literal. This test file is
-// itself part of the RepoAudit repo, and RepoAudit's own CI runs
-// `repoaudit diff` against every PR (.github/workflows/repoaudit-self-check.yml)
+// itself part of the RepoScan repo, and RepoScan's own CI runs
+// `reposcan diff` against every PR (.github/workflows/reposcan-self-check.yml)
 // -- a realistic-looking secret written as one plain string here would be
 // indistinguishable, byte-for-byte, from a real hardcoded credential once
-// committed, and repoaudit would (correctly) flag its own test suite. The
+// committed, and reposcan would (correctly) flag its own test suite. The
 // split keeps the raw source bytes from ever containing the matching
 // substring contiguously, while the concatenated runtime value is still a
 // real match for the regex under test.

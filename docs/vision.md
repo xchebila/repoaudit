@@ -1,16 +1,16 @@
-# 🛡️ RepoAudit — Repository Security Auditor
+# 🛡️ RepoScan — Repository Security Auditor
 
 ## 📌 Pitch en une phrase
 
-> **RepoAudit does not analyze code quality. It detects real-world security mistakes that leak data or break production.**
+> **RepoScan does not analyze code quality. It detects real-world security mistakes that leak data or break production.**
 
 Version plus courte, pour un README ou un tagline GitHub :
 
-> RepoAudit is a 10-second security sanity check for Git repositories.
+> RepoScan is a 10-second security sanity check for Git repositories.
 
 Ces deux formulations font ce que "git status de la sécurité" ne faisait pas complètement : elles excluent explicitement SonarQube du champ de comparaison au lieu de laisser le lecteur faire le rapprochement lui-même.
 
-## 🧭 Comment RepoAudit doit se ressentir
+## 🧭 Comment RepoScan doit se ressentir
 
 - Lancé sur n'importe quel repo, sans setup
 - Résultat en quelques secondes
@@ -42,7 +42,7 @@ Sans persona clair, un outil "développeur" finit vite comme un outil "pour pers
 | Gitleaks | Secrets uniquement | Pas de score global, pas d'autres catégories |
 | SonarQube | Analyse statique complète | Lourd à installer/configurer, pensé pour l'entreprise |
 | Snyk | Vulnérabilités de dépendances | Payant à l'échelle, pas centré repo-santé |
-| **RepoAudit** | **Health check rapide et actionnable** | À prouver : doit éviter de devenir "SonarQube v2" |
+| **RepoScan** | **Health check rapide et actionnable** | À prouver : doit éviter de devenir "SonarQube v2" |
 
 **Le risque principal du projet** : la roadmap (v0.1 à v0.6) couvre à peu près tout ce que fait SonarQube. Le vrai différenciateur n'est pas la liste de checks, c'est l'UX : vitesse, lisibilité, zéro config. Garder ça comme boussole à chaque feature ajoutée — si une feature ralentit le scan ou complexifie la config, elle va à l'encontre de la promesse.
 
@@ -50,7 +50,7 @@ Sans persona clair, un outil "développeur" finit vite comme un outil "pour pers
 
 Sans cette section, la roadmap dérive naturellement vers "mini SonarQube" — chaque nouvelle catégorie de check ressemble à une feature légitime prise isolément, mais l'addition finit par recréer l'outil qu'on voulait éviter. Ces exclusions doivent être aussi visibles que la roadmap elle-même :
 
-RepoAudit ne cherchera **pas** à :
+RepoScan ne cherchera **pas** à :
 
 - Remplacer SonarQube ou les outils SAST
 - Fournir une analyse statique profonde (AST, dataflow)
@@ -63,7 +63,7 @@ RepoAudit ne cherchera **pas** à :
 ## 🏗️ Architecture globale
 
 ```
-repoaudit
+reposcan
 │
 ├── core/            → scanner engine, git reader, report generator, scoring engine
 ├── analyzers/        → secrets, git-history, dependencies, docker, ci, code-smells
@@ -90,7 +90,7 @@ Features : scan fichiers, règles regex, respect du `.gitignore`, output CLI sim
 - **Security Diff Mode** — la feature qui change le positionnement de "scanner" à "outil de review sécurité" :
 
 ```
-repoaudit diff main feature-branch
+reposcan diff main feature-branch
 ```
 
 ```
@@ -99,7 +99,7 @@ repoaudit diff main feature-branch
 ✔️ FIXED: .env removed from repo
 ```
 
-C'est particulièrement fort en CI/CD sur une pull request : au lieu d'un score statique du repo entier, on montre exactement ce que *cette* PR introduit ou corrige. C'est le genre de feature qui donne une raison concrète d'ajouter RepoAudit à un pipeline plutôt que de le lancer une fois et d'oublier.
+C'est particulièrement fort en CI/CD sur une pull request : au lieu d'un score statique du repo entier, on montre exactement ce que *cette* PR introduit ou corrige. C'est le genre de feature qui donne une raison concrète d'ajouter RepoScan à un pipeline plutôt que de le lancer une fois et d'oublier.
 
 ### Phase 4 — Plugin System
 Interface minimale :
@@ -145,14 +145,14 @@ Sans cette hiérarchie explicite, un repo avec un secret AWS exposé mais peu d'
 ## 🖥️ CLI design
 
 ```
-repoaudit scan .
-repoaudit scan https://github.com/user/repo
+reposcan scan .
+reposcan scan https://github.com/user/repo
 
-repoaudit report --format html
-repoaudit report --format json
+reposcan report --format html
+reposcan report --format json
 
-repoaudit plugins list
-repoaudit plugins install xyz
+reposcan plugins list
+reposcan plugins install xyz
 ```
 
 ## 📄 Exemple de sortie
@@ -167,7 +167,7 @@ repoaudit plugins install xyz
 ## 🧾 Configuration
 
 ```yaml
-# .repoaudit.yml
+# .reposcan.yml
 score:
   threshold: 70
 
@@ -213,7 +213,7 @@ Pense : *"je fais un outil de health check de sécurité pour développeurs."*
 - Section **Non-Goals** ajoutée — le garde-fou le plus important contre la dérive "mini SonarQube"
 - **Security Diff Mode** ajouté en Phase 3 : change le positionnement de scanner ponctuel à outil de review, particulièrement fort en CI/CD sur PR
 - Principe de scoring cadré : un critique doit dominer le score, pas s'additionner à égalité avec des mineurs
-- Section "Comment RepoAudit doit se ressentir" ajoutée en haut, comme boussole UX
+- Section "Comment RepoScan doit se ressentir" ajoutée en haut, comme boussole UX
 
 **V1**
 - Personas explicites (dev solo / lead tech / mainteneur OSS)

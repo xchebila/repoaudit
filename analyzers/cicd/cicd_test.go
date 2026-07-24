@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 func TestRun(t *testing.T) {

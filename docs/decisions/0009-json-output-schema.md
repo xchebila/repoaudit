@@ -6,7 +6,7 @@ Accepté (2026-07-23).
 
 ## Contexte
 
-`--format json` (Phase 5, vision.md) sérialise les findings et le score pour un consommateur machine (script CI, autre outil). Vision.md propose une commande séparée `repoaudit report --format json/html` — non retenu ici : il n'existe aucune persistance de scan passé à "reporter" plus tard, et chaque phase précédente a étendu les commandes existantes plutôt qu'introduire un nouvel arbre de commandes. `--format json` est un flag sur `scan` (pas sur `diff`, hors scope de cette PR).
+`--format json` (Phase 5, vision.md) sérialise les findings et le score pour un consommateur machine (script CI, autre outil). Vision.md propose une commande séparée `reposcan report --format json/html` — non retenu ici : il n'existe aucune persistance de scan passé à "reporter" plus tard, et chaque phase précédente a étendu les commandes existantes plutôt qu'introduire un nouvel arbre de commandes. `--format json` est un flag sur `scan` (pas sur `diff`, hors scope de cette PR).
 
 ## Décision
 

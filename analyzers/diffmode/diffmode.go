@@ -1,6 +1,6 @@
-// Package diffmode implements RepoAudit's Security Diff Mode: instead of a
+// Package diffmode implements RepoScan's Security Diff Mode: instead of a
 // static score for the whole repo, it shows exactly what a change (two git
-// refs) introduces or fixes. This is what makes RepoAudit useful as a
+// refs) introduces or fixes. This is what makes RepoScan useful as a
 // recurring PR check, not just a one-off scan (vision.md, Phase 3).
 //
 // It reuses the existing per-file analyzers (secrets, docker, cicd)
@@ -18,8 +18,8 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 
-	"github.com/xchebila/repoaudit/analyzers"
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/analyzers"
+	"github.com/xchebila/reposcan/core"
 )
 
 // ErrNotAGitRepo mirrors githistory's error: Security Diff Mode is

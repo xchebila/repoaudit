@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>RepoAudit report — /repo</title>
+<title>RepoScan report — /repo</title>
 <style>
   :root {
     color-scheme: light;
@@ -95,7 +95,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>RepoAudit report</h1>
+    <h1>RepoScan report</h1>
     <div class="meta">/repo — generated 2000-01-01 00:00</div>
   </header>
 

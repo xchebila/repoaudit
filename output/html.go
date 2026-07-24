@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 // WriteHTMLReport renders a self-contained HTML dashboard: no external
@@ -100,7 +100,7 @@ const htmlTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>RepoAudit report — {{.Path}}</title>
+<title>RepoScan report — {{.Path}}</title>
 <style>
   :root {
     color-scheme: light;
@@ -193,7 +193,7 @@ const htmlTemplate = `<!DOCTYPE html>
 <body>
 <div class="wrap">
   <header>
-    <h1>RepoAudit report</h1>
+    <h1>RepoScan report</h1>
     <div class="meta">{{.Path}} — generated {{.GeneratedAt}}</div>
   </header>
 

@@ -1,4 +1,4 @@
-// Package plugin implements RepoAudit's external plugin protocol (Phase 4):
+// Package plugin implements RepoScan's external plugin protocol (Phase 4):
 // a subprocess speaking NDJSON on stdin/stdout, never a same-process Go
 // plugin. See docs/plugin-protocol.md for the full contract this code
 // implements — that document, not this one, is the source of truth for
@@ -18,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/core"
 )
 
 const (
@@ -99,9 +99,9 @@ func (p *Plugin) Close() {
 
 func (p *Plugin) handshake() error {
 	req := map[string]any{
-		"type":              "hello",
-		"protocol_version":  protocolVersion,
-		"repoaudit_version": "dev",
+		"type":             "hello",
+		"protocol_version": protocolVersion,
+		"reposcan_version": "dev",
 	}
 	if err := p.writeLine(req); err != nil {
 		return fmt.Errorf("sending hello: %w", err)
@@ -283,7 +283,7 @@ var validSeverity = map[string]core.Severity{
 }
 
 // convertFindings applies the same non-negotiable quality bar the
-// repoaudit-finding skill imposes on every built-in rule — a finding with
+// reposcan-finding skill imposes on every built-in rule — a finding with
 // no message/fix, or a severity string that isn't one of the four exact
 // values, is dropped and logged, not silently accepted or guessed at.
 func (p *Plugin) convertFindings(wire []wireFinding, path string) []core.Finding {

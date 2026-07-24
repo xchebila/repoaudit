@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/xchebila/repoaudit/cli"
+	"github.com/xchebila/reposcan/cli"
 )
 
 // version is overridden at build time via -ldflags "-X main.version=...";

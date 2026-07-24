@@ -1,6 +1,6 @@
 # Testing — corpus, critères de sortie, où trouver quoi
 
-Ce fichier centralise comment RepoAudit est validé contre des repos réels, pour ne pas avoir à reconstruire cette connaissance à chaque phase (le corpus complet a déjà été perdu une fois, en Phase 2, quand `/tmp` a été vidé par une interruption de session).
+Ce fichier centralise comment RepoScan est validé contre des repos réels, pour ne pas avoir à reconstruire cette connaissance à chaque phase (le corpus complet a déjà été perdu une fois, en Phase 2, quand `/tmp` a été vidé par une interruption de session).
 
 Les décisions de design elles-mêmes (pourquoi un budget de temps plutôt qu'une profondeur fixe, pourquoi ne pas dégrader la sévérité sur un pattern de chemin...) vivent dans `docs/decisions/` — ce fichier n'y touche pas, il n'y renvoie que.
 
@@ -134,7 +134,7 @@ exec python3 "$(pwd)/docs/examples/reference-plugin.py" --misbehave=$mode
 EOF
   chmod +x /tmp/reference-$mode.sh
 done
-./repoaudit scan . --plugin /tmp/reference-crash.sh
+./reposcan scan . --plugin /tmp/reference-crash.sh
 ```
 
 ## Critères de sortie mesurables (déjà validés)

@@ -13,8 +13,8 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 
-	"github.com/xchebila/repoaudit/analyzers/secrets"
-	"github.com/xchebila/repoaudit/core"
+	"github.com/xchebila/reposcan/analyzers/secrets"
+	"github.com/xchebila/reposcan/core"
 )
 
 // DefaultBudget bounds the default (no-flag) scan by wall-clock time, not

@@ -1,7 +1,7 @@
-name: RepoAudit self-check
+name: RepoScan self-check
 
-# Dogfoods action.yml against this repo's own history: `repoaudit diff`
-# on pull requests, `repoaudit scan --deps` otherwise. This is also the
+# Dogfoods action.yml against this repo's own history: `reposcan diff`
+# on pull requests, `reposcan scan --deps` otherwise. This is also the
 # only realistic way to validate the action end-to-end (real event
 # payloads, real runner, real `go install` from GitHub) rather than
 # trusting the YAML compiles.
