@@ -54,6 +54,8 @@ Snippets documentés (`docs/ci-integrations.md`), pas un artefact publié (pas d
 
 **Validé, pas juste écrit** : `brew tap` + `brew install --build-from-source` + `brew test` exécutés réellement en local avant de pousser la formula — les trois verts. Commande d'installation documentée dans le README principal, à côté de `go install` (qui n'existait pas non plus comme instruction directe utilisateur avant cette même entrée — ajouté au passage).
 
+**Renommage RepoAudit → RepoScan (avant publication)** : le tap est passé à [xchebila/homebrew-reposcan](https://github.com/xchebila/homebrew-reposcan), `Formula/reposcan.rb`, pointant vers `v1.0.2` — le premier tag coupé sous le module renommé (`v1.0.0` et `v1.0.1` déclarent encore `github.com/xchebila/repoaudit` dans leur `go.mod`, donc incompatibles avec `go install github.com/xchebila/reposcan@...` quel que soit le tag demandé, indépendamment de tout redirect GitHub — vérifié empiriquement : `go install ...@v1.0.1` échoue avec `module declares its path as: github.com/xchebila/repoaudit but was required as: github.com/xchebila/reposcan`). Même triple validation locale refaite sur la nouvelle formula avant de la pousser. L'ancien tap `homebrew-repoaudit` est à supprimer — bloqué : le token `gh` de cet environnement n'a pas le scope `delete_repo`, suppression à faire manuellement.
+
 ---
 
 ## ⏸️ En pause — en attente d'un besoin réel
